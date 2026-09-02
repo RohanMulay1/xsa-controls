@@ -1,0 +1,62 @@
+A4 - XSA Figure 1 recomputed under an equicorrelated-value null
+======================================================================
+
+Published inputs (XSA arXiv:2603.09078v1, Figure 1)
+  mean cos(v_i, v_j)   rho     = 0.0560
+  mean self-weight     a_ii    = 0.0500
+  mean cos(y_i, v_i)   observed= 0.3730
+
+Model
+  cos(y_i,v_i) = [a_ii + (1-a_ii) rho] / sqrt((1-rho) S2 + rho)
+  floor        = rho              / sqrt((1-rho) S2' + rho)
+  one free parameter: S2, the attention row's participation term
+
+Solving for the effective context width that reproduces the
+published floor of 0.200:
+  n_eff (attended keys)        = 43.1
+  floor (recomputed)           = 0.2000
+  cos_self predicted by model  = 0.3682
+  cos_self observed (reported) = 0.3730
+  model-vs-observed gap        = -0.0048
+
+Excess, both readings
+  observed - floor  = 0.1730  ->  46.4% of the statistic is self-specific
+  model    - floor  = 0.1682  ->  45.7%
+
+CONSISTENCY CHECK against the values the spec states
+----------------------------------------------------------------------
+  spec: floor 0.200, observed 0.373, excess 0.165, 44%
+
+  THE STATED TRIPLE DOES NOT CLOSE, and the Day-1 gate that
+  requires all four numbers can never pass as written.
+
+    observed - floor        = 0.3730 - 0.2000 = 0.1730
+    but the spec says excess = 0.1650   (differs by 0.0080)
+
+    0.1730 / 0.3730 = 46.4%, not 44%
+
+  Two of the three stated numbers agree with each other:
+    excess 0.165 and 44% are consistent with observed 0.373
+    but they require a floor of 0.2080, not 0.200.
+    (the percentage alone implies a floor of 0.2089)
+
+  RESOLUTION ADOPTED: report the floor as the recomputed
+  0.200 and the excess as 0.173 (46% of the statistic).
+  The qualitative claim is unchanged and is what matters: under
+  an anisotropy null, well under half of cos(y_i,v_i) is
+  self-specific, on XSA's own numbers, at XSA's own scale.
+
+Sensitivity to the one free parameter
+----------------------------------------------------------------------
+  n_eff    floor   cos_self(model)   excess   % self-specific
+    16.0  0.1624       0.3041      0.1417       46.6%
+    32.0  0.1905       0.3522      0.1618       45.9%
+    43.1  0.2000       0.3682      0.1682       45.7%
+    64.0  0.2102       0.3849      0.1747       45.4%
+   128.0  0.2223       0.4046      0.1822       45.0%
+   256.0  0.2292       0.4155      0.1863       44.8%
+
+The floor is sensitive to how peaked the attention rows are, so the
+single number should always be reported with the assumption that
+produced it. That sensitivity is itself an argument for measuring the
+null empirically (Check 1, A1) rather than modelling it.

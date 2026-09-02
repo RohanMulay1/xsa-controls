@@ -1,0 +1,12 @@
+Position-0 degeneracy, measured on CFG_TINY (self-test 3)
+=========================================================
+a_00                       = 1.0000000000   (exactly 1 by construction:
+                                        causal softmax over one key)
+max ||y_0 - v_0||          = 0.000e+00
+max ||z_0|| with XSA a=10  = 2.033e-06
+
+Consequence: XSA's intervention is identically zero at position 0 in
+every layer and every head. The method cannot act there. XSA does not
+mention this; its Figure 1 restricts the diagonal panel to i > 1.
+The paper must state it, and diagmask must exclude position 0 or the
+softmax row becomes all -inf and produces NaN.

@@ -1,0 +1,19 @@
+{
+  "target": {
+    "cos_self": 0.5406,
+    "cos_null": 0.3798,
+    "excess": 0.1608
+  },
+  "measured": {
+    "cos_self": 0.4832470630430512,
+    "cos_null": 0.3025577704961305,
+    "excess": 0.18068929254692073
+  },
+  "abs_deltas": {
+    "cos_self": 0.057352936956948763,
+    "cos_null": 0.07724222950386955,
+    "excess": 0.019889292546920734
+  },
+  "tolerance": 0.01,
+  "reproduces": false
+}
