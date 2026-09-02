@@ -1,0 +1,18 @@
+# Core. Pinned loosely; the numpy<2 pin is required by the spec's env notes.
+torch>=2.1
+numpy<2.0
+scipy>=1.10
+matplotlib>=3.7
+pandas>=2.0
+tqdm>=4.65
+
+# Data preparation (FineWeb-Edu). Optional for the CPU test suite.
+datasets>=2.14
+tiktoken>=0.5
+
+# Track A frozen-model audits. Optional for the CPU test suite.
+transformers>=4.40
+accelerate>=0.25
+
+# Test suite
+pytest>=7.4
