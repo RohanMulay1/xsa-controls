@@ -17,7 +17,7 @@ every experiment named was executed on the hardware stated.
 | Experiments executed | 3 (all CPU, none on the training leg) | **A1 ladder to 6.9B, A3 GQA on 2 real models, A6 on 2 methods, Day-2 calibration, Day-3 pilot, 12 factorial cells** |
 | `calibrate.py` coverage | **0%** | **96%** |
 | Overall coverage | 74% | **90%** |
-| Tests | 139 | **199** |
+| Tests | 139 | **202** |
 | GPU-only defects found | none looked for | **1 crash-on-every-run bug** |
 | Definition-of-done items complete | 4 of 15 | **8 of 11 DONE, 2 PARTIAL, 1 BLOCKED** |
 | Day gates passing | 1 | **1, 3, 8, 9** (4, 5, 6 at 4/5; 7 at 3/4) |
@@ -110,6 +110,21 @@ to the CRPA repository's headline claim and returned UNRESOLVABLE, with a
 ceiling of 0.102 on any observable correlation. That claim has been withdrawn.
 This is the clearest evidence that the check is worth shipping.
 
+
+**CFG_M, the scale check.** The budget solver dropped it in the spec's
+pre-registered priority order, recording the arithmetic. It was attempted
+out-of-band anyway to close the item. That attempt was abandoned and its
+results deleted, for a reason worth recording: two invocations used different
+`--tokens-per-run` values and wrote into one results directory under different
+content hashes, so nothing collided and nothing complained. The same
+`(arm, seed)` ended up present at both 3e7 and 5e7 tokens.
+
+The budget-homogeneity guard ported from the sibling CRPA project during this
+pass is what caught it. Averaging across token budgets produces a number
+describing neither run, and the Days 4-6 gate's "identical `tokens_seen` per
+seed" check would have failed on the mixed data. CFG_M therefore remains
+**not run**, which is also its spec-sanctioned status.
+
 ---
 
 ## Reproduction
@@ -130,7 +145,7 @@ python scripts/run_factorial.py --size S --arms baseline xsa random \
   --seeds 42 1337 2024 7 99 512 8191 31337 --tokens-per-run 5e7 --device cuda
 python scripts/make_figures.py
 
-pytest -m "not slow"    # 169 tests
+pytest                  # 202 tests
 ```
 
 ---

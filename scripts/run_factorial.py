@@ -118,10 +118,45 @@ def run_cell(cfg: ExperimentConfig, data_dir: Path, results_dir: Path,
     return rec
 
 
+def drop_inconsistent_budgets(records: List[RunRecord]) -> tuple:
+    """Keep only records trained for the modal token budget.
+
+    Ported from the sibling CRPA project, which had the same defect and built
+    this guard for it. Averaging a 3e7-token run with a 5e7-token run produces
+    a number describing neither, and it is easy to create by accident: two
+    invocations with different --tokens-per-run write into one results
+    directory under different content hashes, so nothing collides and nothing
+    complains.
+
+    That happened here on the CFG_M scale check, and this guard caught it. The
+    minority budget is dropped and named, never silently averaged.
+    """
+    def budget(rec):
+        return (rec.metrics or {}).get("tokens_seen")
+
+    counts: Dict[Any, int] = {}
+    for r in records:
+        counts[budget(r)] = counts.get(budget(r), 0) + 1
+    if len(counts) <= 1:
+        return list(records), []
+    modal = max(counts.items(), key=lambda kv: (kv[1], kv[0] or 0))[0]
+    keep = [r for r in records if budget(r) == modal]
+    dropped = [r for r in records if budget(r) != modal]
+    if dropped:
+        print("[aggregate] refusing to average across token budgets: keeping "
+              "{} record(s) at tokens_seen={} and dropping {} at {}. A run "
+              "trained on a different number of tokens is a different "
+              "experiment.".format(len(keep), modal, len(dropped),
+                                   sorted({str(budget(r)) for r in dropped})))
+    return keep, dropped
+
+
 def paired_tables(records: List[RunRecord], size: str) -> List[Dict[str, Any]]:
     """Paired tests per arm, primary endpoint first and labelled."""
     by_arm: Dict[str, Dict[int, float]] = {}
-    for r in numeric_records(records):
+    records, _dropped_budgets = drop_inconsistent_budgets(
+        numeric_records(records))
+    for r in records:
         if r.size != size:
             continue
         loss = r.metrics.get("final_val_loss")

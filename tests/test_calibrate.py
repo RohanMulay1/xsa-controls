@@ -233,3 +233,46 @@ class TestCalibrateEndToEnd:
         back = json.loads(path.read_text(encoding="utf-8"))
         assert back["sizes"]["TINY"]["budget"]["tokens_per_run"] == \
             out["sizes"]["TINY"]["budget"]["tokens_per_run"]
+
+
+class TestBudgetHomogeneityGuard:
+    """Averaging across token budgets produces a number describing neither.
+
+    Ported from the sibling CRPA project, which hit this first. It is easy to
+    create by accident: two invocations with different --tokens-per-run write
+    into one results directory under different content hashes, so nothing
+    collides and nothing complains. It happened here on the CFG_M scale check.
+    """
+
+    class _Rec:
+        def __init__(self, tokens, arm="baseline", seed=42, size="M"):
+            self.metrics = {"tokens_seen": tokens, "final_val_loss": 5.0}
+            self.arm, self.seed, self.size = arm, seed, size
+            self.status = "completed"
+
+        @property
+        def is_numeric(self):
+            return True
+
+    def test_a_minority_budget_is_dropped_and_named(self, capsys):
+        from scripts.run_factorial import drop_inconsistent_budgets
+        recs = ([self._Rec(50_000_000, seed=s) for s in (1, 2, 3)]
+                + [self._Rec(30_000_000, seed=s) for s in (1, 2)])
+        keep, dropped = drop_inconsistent_budgets(recs)
+        assert len(keep) == 3 and len(dropped) == 2
+        assert all(r.metrics["tokens_seen"] == 50_000_000 for r in keep)
+        out = capsys.readouterr().out
+        assert "refusing to average across token budgets" in out
+
+    def test_a_homogeneous_set_passes_through_untouched(self):
+        from scripts.run_factorial import drop_inconsistent_budgets
+        recs = [self._Rec(50_000_000, seed=s) for s in (1, 2, 3)]
+        keep, dropped = drop_inconsistent_budgets(recs)
+        assert len(keep) == 3 and dropped == []
+
+    def test_records_without_a_budget_do_not_crash_it(self):
+        from scripts.run_factorial import drop_inconsistent_budgets
+        r = self._Rec(50_000_000)
+        r.metrics = {}
+        keep, dropped = drop_inconsistent_budgets([r, self._Rec(50_000_000)])
+        assert len(keep) + len(dropped) == 2
