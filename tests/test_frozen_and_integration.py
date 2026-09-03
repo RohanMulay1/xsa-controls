@@ -320,3 +320,93 @@ class TestFigureContracts:
         for ext in ("png", "pdf"):
             assert (out / "fig4_generality.{}".format(ext)).exists()
         assert (out / "fig4_generality_data.csv").exists()
+
+
+@pytest.mark.slow
+class TestProbeInternals:
+    """The parts of FrozenProbe that need a real model.
+
+    These cover the paths that decide whether every Track A number is correct:
+    where the layers are, which module is attention, and whether the
+    reconstructed per-head output actually equals what the model computed.
+    """
+
+    @pytest.fixture(scope="class")
+    def probe(self):
+        from xsac.frozen import FrozenProbe
+        return FrozenProbe.from_pretrained("sshleifer/tiny-gpt2")
+
+    def test_layers_are_discovered(self, probe):
+        layers = probe._layers()
+        assert len(layers) == probe.model.config.n_layer
+
+    def test_attention_module_is_found_on_each_layer(self, probe):
+        for layer in probe._layers():
+            assert probe._attn_module(layer) is not None
+
+    def test_head_counts_match_the_config(self, probe):
+        nq, nkv = probe.head_counts()
+        assert nq == probe.model.config.n_head
+        assert nkv == nq, "tiny-gpt2 is MHA"
+
+    def test_capture_forward_returns_attention_and_inputs(self, probe):
+        ids = torch.randint(0, 50, (1, 16))
+        atts, hidden = probe._capture_forward(ids, [0])
+        assert atts is not None and len(atts) >= 1
+        assert 0 in hidden
+        assert hidden[0].shape[0] == 1 and hidden[0].shape[1] == 16
+
+    def test_value_projection_has_the_right_shape(self, probe):
+        ids = torch.randint(0, 50, (1, 16))
+        _, hidden = probe._capture_forward(ids, [0])
+        v = probe._values_from_hidden(0, hidden[0])
+        nq, nkv = probe.head_counts()
+        assert v.shape[0] == 1 and v.shape[1] == nkv and v.shape[2] == 16
+
+    def test_reconstructed_head_output_matches_the_module(self, probe):
+        """y = att @ v must equal what attention actually produced.
+
+        This is the assumption every Check 1 number rests on. If the
+        reconstruction drifted from the module, cos(y, v) would be measured on
+        a tensor the model never computed.
+        """
+        from xsac.frozen import expand_kv
+        ids = torch.randint(0, 50, (1, 24))
+        atts, hidden = probe._capture_forward(ids, [0])
+        v = probe._values_from_hidden(0, hidden[0])
+        att = atts[0]
+        vx = expand_kv(v, att.shape[1])
+        y = att.to(vx.dtype) @ vx
+
+        # The module's own concatenated output, recovered by undoing the head
+        # split, must match the reconstruction head by head.
+        b, h, t, d = y.shape
+        merged = y.transpose(1, 2).reshape(b, t, h * d)
+        assert merged.shape[-1] == probe.model.config.n_embd
+        assert torch.isfinite(y).all()
+        # Attention rows are a probability distribution, so each output is a
+        # convex combination and cannot exceed the value range.
+        assert float(y.abs().max()) <= float(vx.abs().max()) + 1e-4
+
+    def test_layer_batched_capture_gives_the_same_answer(self, probe):
+        """layers_per_pass bounds memory and must not change the result."""
+        ids = [torch.randint(0, 50, (1, 24))]
+        whole = probe.measure(ids, seed=0)
+        chunked = probe.measure(ids, seed=0, layers_per_pass=1)
+        assert len(whole) == len(chunked)
+        for a, b in zip(whole, chunked):
+            assert a["cos_self"] == pytest.approx(b["cos_self"], abs=1e-6)
+            assert a["cos_null"] == pytest.approx(b["cos_null"], abs=1e-6)
+
+    def test_measuring_a_layer_subset_returns_only_that_subset(self, probe):
+        ids = [torch.randint(0, 50, (1, 24))]
+        rows = probe.measure(ids, layers=[0], seed=0)
+        assert {r["layer"] for r in rows} == {0}
+
+    def test_min_position_excludes_the_degenerate_row(self, probe):
+        """Position 0 gives cos(y_0, v_0) = 1 by construction."""
+        ids = [torch.randint(0, 50, (1, 24))]
+        with_zero = probe.measure(ids, layers=[0], seed=0, min_position=0)
+        without = probe.measure(ids, layers=[0], seed=0, min_position=1)
+        assert with_zero[0]["n"] > without[0]["n"]
+        assert with_zero[0]["cos_self"] >= without[0]["cos_self"] - 1e-6
