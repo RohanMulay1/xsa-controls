@@ -26,7 +26,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install "numpy<2.0" scipy matplotlib pandas tqdm pytest
+          # transformers is needed by the GQA expansion test, which compares
+          # our expand_kv against HF's repeat_kv. That comparison is the guard
+          # against every GQA number being silently wrong, so it runs on every
+          # push rather than being deferred to the slow job.
+          pip install "numpy<2.0" scipy matplotlib pandas tqdm pytest transformers
 
       - name: Self-tests (the Day-1 gate; all ten must pass)
         run: python scripts/selftest_arms.py --json results/selftest.json

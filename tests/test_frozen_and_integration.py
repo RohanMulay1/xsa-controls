@@ -22,6 +22,10 @@ class TestGQAExpansion:
 
     @pytest.mark.parametrize("n_rep", [1, 2, 4, 8])
     def test_matches_huggingface_repeat_kv(self, n_rep):
+        # CI installs transformers so this genuinely runs. The importorskip is
+        # for local environments without it; it must never be the reason this
+        # check does not run in CI.
+        pytest.importorskip("transformers")
         from transformers.models.llama.modeling_llama import repeat_kv
         v = torch.randn(2, 4, 7, 8)
         assert torch.equal(expand_kv(v, 4 * n_rep), repeat_kv(v, n_rep))
