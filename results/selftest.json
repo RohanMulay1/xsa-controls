@@ -1,0 +1,67 @@
+{
+  "n_pass": 10,
+  "n_total": 10,
+  "all_pass": true,
+  "tests": [
+    {
+      "n": 1,
+      "name": "Zero-init identity",
+      "passed": true,
+      "detail": "max |z - y| = 0.000e+00 over 4 arms (worst: )"
+    },
+    {
+      "n": 2,
+      "name": "Full-strength orthogonality",
+      "passed": true,
+      "detail": "|<z,v_hat>| = 2.399e-06, |<z,r_hat>| = 4.709e-06"
+    },
+    {
+      "n": 3,
+      "name": "Position-0 degeneracy",
+      "passed": true,
+      "detail": "a_00 = 1.000000, ||y_0-v_0|| = 0.00e+00, ||z_0|| = 2.03e-06 -> results/position0.txt"
+    },
+    {
+      "n": 4,
+      "name": "RandomDir frozen",
+      "passed": true,
+      "detail": "delta after step = 0.0e+00, across seeds = 0.0e+00, across layers = 1.225"
+    },
+    {
+      "n": 5,
+      "name": "MeanValue no gradient leak",
+      "passed": true,
+      "detail": "m.grad is None = True, EMA moved m by 7.512e-03"
+    },
+    {
+      "n": 6,
+      "name": "MeanValue frozen in eval",
+      "passed": true,
+      "detail": "max |m_after - m_before| = 0.0e+00"
+    },
+    {
+      "n": 7,
+      "name": "DiagMask row 0 valid",
+      "passed": true,
+      "detail": "gated@a=10: finite=True att[0,0]=1.000000 diag=1.0e-13; hard: finite=True att[0,0]=1.000000 diag=0.0e+00"
+    },
+    {
+      "n": 8,
+      "name": "Gradient reaches alpha",
+      "passed": true,
+      "detail": "max |dL/dalpha|: xsa=4.60e-03, random=1.30e-03, meanval=2.48e-03"
+    },
+    {
+      "n": 9,
+      "name": "Paired determinism",
+      "passed": true,
+      "detail": "step0 6.263547420502 / step1 6.219477653503, bit-identical = True"
+    },
+    {
+      "n": 10,
+      "name": "Cross-arm pairing at step 0",
+      "passed": true,
+      "detail": "max |loss_arm - loss_baseline| = 0.000e+00 over 5 arms"
+    }
+  ]
+}

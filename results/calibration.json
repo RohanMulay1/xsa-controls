@@ -1,0 +1,133 @@
+{
+  "rate_usd_hr": 0.74,
+  "rate_is_placeholder": false,
+  "cost_ceiling": 3.0,
+  "sizes": {
+    "S": {
+      "config": {
+        "n_layer": 8,
+        "n_head": 8,
+        "n_embd": 512,
+        "block_size": 1024,
+        "vocab_size": 50304,
+        "dropout": 0.0,
+        "bias": false,
+        "tie_weights": true,
+        "rope_theta": 10000.0
+      },
+      "baseline": {
+        "arm": "baseline",
+        "device": "cuda",
+        "steps": 25,
+        "micro_batch": 8,
+        "seconds": 1.204777717590332,
+        "seconds_per_step": 0.04819110870361328,
+        "tokens_per_sec": 169989.8636983585,
+        "achieved_tflops": 34.22347993293503,
+        "mfu_vs_181": 0.1890799996294753,
+        "n_params": 50930176
+      },
+      "diagmask": {
+        "arm": "diagmask",
+        "device": "cuda",
+        "steps": 25,
+        "micro_batch": 8,
+        "seconds": 2.8476760387420654,
+        "seconds_per_step": 0.11390704154968262,
+        "tokens_per_sec": 71918.29309715598,
+        "achieved_tflops": 14.47906485170754,
+        "mfu_vs_181": 0.07999483343484828,
+        "n_params": 50930240
+      },
+      "diagmask_slowdown": 2.3636526449357675,
+      "slowdown_in_expected_band": false,
+      "budget": {
+        "hours_available": 4.054054054054054,
+        "rate_usd_hr": 0.74,
+        "cost_ceiling": 3.0,
+        "n_runs": 43,
+        "n_runs_after_cuts": 24,
+        "diagmask_slowdown": 2.3636526449357675,
+        "tokens_per_run_raw": 43734097.15367594,
+        "tokens_per_run_rounded": 43646976,
+        "tokens_per_run": 349962240.0,
+        "clamped_low": true,
+        "clamped_high": false,
+        "affordable": false,
+        "cuts_applied": [
+          "cfg_m_scale_check",
+          "secondary_arms"
+        ],
+        "drop_cfg_m": true,
+        "drop_secondary_arms": true,
+        "projected_spend_usd": 24.006136820678712,
+        "over_stop_threshold": false,
+        "stop_threshold_usd": 66.0,
+        "note": "budget did not reach the 3.5e8 floor, so cfg_m_scale_check then secondary_arms were dropped and the budget re-solved; STILL below the floor after every permitted cut. The design is not affordable at this rate; stop and report rather than shrinking the primary endpoint"
+      }
+    },
+    "M": {
+      "config": {
+        "n_layer": 12,
+        "n_head": 12,
+        "n_embd": 768,
+        "block_size": 1024,
+        "vocab_size": 50304,
+        "dropout": 0.0,
+        "bias": false,
+        "tie_weights": true,
+        "rope_theta": 10000.0
+      },
+      "baseline": {
+        "arm": "baseline",
+        "device": "cuda",
+        "steps": 25,
+        "micro_batch": 8,
+        "seconds": 2.6180508136749268,
+        "seconds_per_step": 0.10472203254699707,
+        "tokens_per_sec": 78226.13637988358,
+        "achieved_tflops": 48.72347321331965,
+        "mfu_vs_181": 0.2691904597420975,
+        "n_params": 123587328
+      },
+      "diagmask": {
+        "arm": "diagmask",
+        "device": "cuda",
+        "steps": 25,
+        "micro_batch": 8,
+        "seconds": 6.116905450820923,
+        "seconds_per_step": 0.2446762180328369,
+        "tokens_per_sec": 33480.98178835095,
+        "achieved_tflops": 20.85376825206292,
+        "mfu_vs_181": 0.11521418923791668,
+        "n_params": 123587472
+      },
+      "diagmask_slowdown": 2.336434961029154,
+      "slowdown_in_expected_band": false,
+      "budget": {
+        "hours_available": 4.054054054054054,
+        "rate_usd_hr": 0.74,
+        "cost_ceiling": 3.0,
+        "n_runs": 43,
+        "n_runs_after_cuts": 24,
+        "diagmask_slowdown": 2.336434961029154,
+        "tokens_per_run_raw": 20360056.49291612,
+        "tokens_per_run_rounded": 20316160,
+        "tokens_per_run": 349962240.0,
+        "clamped_low": true,
+        "clamped_high": false,
+        "affordable": false,
+        "cuts_applied": [
+          "cfg_m_scale_check",
+          "secondary_arms"
+        ],
+        "drop_cfg_m": true,
+        "drop_secondary_arms": true,
+        "projected_spend_usd": 51.566002302856454,
+        "over_stop_threshold": false,
+        "stop_threshold_usd": 66.0,
+        "note": "budget did not reach the 3.5e8 floor, so cfg_m_scale_check then secondary_arms were dropped and the budget re-solved; STILL below the floor after every permitted cut. The design is not affordable at this rate; stop and report rather than shrinking the primary endpoint"
+      }
+    }
+  }
+}
