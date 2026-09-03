@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -31,7 +30,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from xsac.arms import Baseline, MeanValue, RandomDir, XSA, build_arm  # noqa: E402
+from xsac.arms import MeanValue, RandomDir, XSA, build_arm  # noqa: E402
 from xsac.config import ARMS, CFG_TINY  # noqa: E402
 from xsac.model import GPT  # noqa: E402
 

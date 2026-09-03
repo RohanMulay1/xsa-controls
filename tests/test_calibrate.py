@@ -16,13 +16,12 @@ import json
 import math
 
 import pytest
-import torch
 
 from xsac.calibrate import (CUT_ORDER, calibrate, cuts_available,
                             flops_per_token, measure_throughput, next_cut,
                             solve_token_budget, write_calibration)
 from xsac.config import (CFG_M, CFG_S, CFG_TINY, COST_CEILING_TRAIN,
-                         COST_STOP_AND_REPORT, TRAIN, TrainConfig)
+                         COST_STOP_AND_REPORT, TRAIN)
 
 
 class TestFlopsPerToken:
@@ -192,6 +191,10 @@ class TestThroughputMeasurement:
                                   warmup=2, device="cpu")
         assert diag["seconds_per_step"] > 0
         assert diag["tokens_per_sec"] > 0
+        # Both paths must produce comparable token counts, so the slowdown
+        # ratio the budget solver consumes is a like-for-like comparison.
+        assert base["micro_batch"] == diag["micro_batch"]
+        assert base["steps"] == diag["steps"]
 
     def test_parameter_count_matches_the_config(self):
         out = measure_throughput(CFG_TINY, "baseline", steps=1, micro_batch=2,

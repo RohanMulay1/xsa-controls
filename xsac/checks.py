@@ -76,7 +76,6 @@ from xsac.stats import (
     mean_ci,
     paired_test,
     replicate_agreement,
-    spearman,
     split_half_reliability,
 )
 

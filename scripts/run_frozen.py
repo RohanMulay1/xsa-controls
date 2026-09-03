@@ -31,7 +31,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from xsac.frozen import FrozenProbe, aggregate_model, gqa_within_across  # noqa: E402
-from xsac.runmeta import (RunRecord, canonical_json, numeric_records,  # noqa: E402
+from xsac.runmeta import (RunRecord, numeric_records,  # noqa: E402
                           read_records, run_id, write_csv, write_record)
 
 ROOT = Path(__file__).resolve().parents[1]

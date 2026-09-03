@@ -17,7 +17,7 @@ resolve at the 0.001 nat level.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Tuple
 
 import numpy as np
 import torch
