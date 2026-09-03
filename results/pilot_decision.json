@@ -1,0 +1,8 @@
+{
+  "sigma_paired": 0.005048673294313334,
+  "mde": 0.005176429127486357,
+  "n_seeds_planned": 8,
+  "branch": "reduce",
+  "action": "Drop the secondary arms. Run 3 arms x 12 seeds at CFG_S. Keep the scale check and A1.",
+  "proceed": true
+}
