@@ -30,16 +30,31 @@ nothing.
 
 ## Status
 
-**The implementation is complete and validated. The experiments have not been
-run.** No GPU has been rented and no budget has been spent.
+**The implementation is complete and the experimental programme has run.**
 
 | | |
 |---|---|
-| Self-tests | **10/10 pass** on CPU |
-| Test suite | **139 tests**, all passing (135 fast + 4 network) |
-| Day-1 gate | see `python scripts/verify_day.py 1` |
-| Days 2-10 | **not run** — they need the GPU leg |
-| Budget spent | **$0.00** of $70 |
+| Self-tests | **10/10 pass**; step-0 deviation across all five arms is `0.000e+00` |
+| Test suite | **202 tests**, all passing; **90% coverage** |
+| Day gates passing | **1, 2, 3, 8, 9, 10**. Days 4-6 at 4/5, Day 7 at 3/4 |
+| Factorial | **24 cells**, 3 arms x 8 seeds at CFG_S |
+| Scale ladder | **9 models to Pythia-6.9B**, 5,408 head rows |
+| Figures | **5 of 5 from real data**, none skipped |
+| Budget spent | approximately **$12** of $70 |
+
+Two things are genuinely outstanding, both with reasons rather than excuses:
+
+* **CFG_M, the scale check.** The budget solver dropped it in the spec's
+  pre-registered priority order. An out-of-band attempt was abandoned when the
+  budget-homogeneity guard caught two invocations mixing token budgets in one
+  results directory, and the contaminated cells were deleted rather than
+  shipped. Days 4-6 therefore sit at 4/5.
+* **The GPT-2 Check-1 reference does not reproduce**, and that gate is left
+  failing on purpose. Thirteen measurement conventions were tested and none
+  matches; see `results/gpt2_diagnosis.csv` and `FINAL_STATUS.md`.
+
+`AUDIT.md` has the requirement-by-requirement matrix and `FINAL_STATUS.md` the
+final scores, blockers and reproduction commands.
 
 Every experiment that has not run is recorded with status `not_run`, `oom` or
 `failed` and contributes no numbers to any table or figure. `numeric_records()`
