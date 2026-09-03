@@ -301,3 +301,37 @@ class TestZeroVarianceLimit:
         res = paired_test(treat, base)
         assert res["zero_variance"] is False
         assert math.isfinite(res["t"])
+
+
+class TestCheck1LabelsAreNotHardcoded:
+    """Check 1 applies to any statistic with a null, not only cosines.
+
+    A6 measures attention mass and activation magnitude. Printing
+    "cos(y_i, v_i)" beside those would mislabel a correct number, which is a
+    reporting defect even though the arithmetic is right.
+    """
+
+    def test_default_labels_describe_the_xsa_case(self):
+        s = check_null(0.54, 0.38).summary()
+        assert "cos(y_i, v_i)" in s and "cos(y_i, v_j)" in s
+
+    def test_labels_can_be_overridden_for_another_method(self):
+        s = check_null(0.4028, 0.0034, label="attention_sink",
+                       stat_name="mass on position 0",
+                       null_name="mass on positions 1-3").summary()
+        assert "mass on position 0" in s
+        assert "mass on positions 1-3" in s
+        assert "cos(y_i" not in s
+
+    def test_a_statistic_that_dwarfs_its_null_passes(self):
+        """Attention sinks survive their null decisively, unlike XSA's."""
+        res = check_null(0.4028, 0.0034)
+        assert res.passed is True
+        assert res.self_specific_fraction > 0.99
+
+    def test_the_gaussian_maximum_null_is_the_right_order(self):
+        """max of d standard normals grows like sqrt(2 ln d)."""
+        import math
+        for d in (768, 1024, 4096):
+            expected = math.sqrt(2 * math.log(d))
+            assert 3.0 < expected < 5.0
