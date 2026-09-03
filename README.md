@@ -48,23 +48,70 @@ become a data point.
 
 ### What has actually been measured
 
-Three things ran end to end on CPU against real models and real text:
+All of the following ran on a RunPod RTX 6000 Ada 48GB against real models and
+real text (wikitext-103), not synthetic data.
 
-1. **A4, XSA's Figure 1 recomputed** (`results/xsa_figure1_recompute.txt`).
-   Pure arithmetic. The equicorrelated-value null reproduces the published
-   floor of 0.200 at an effective attention width of 43 keys, and predicts
-   `cos_self = 0.3682` against the reported 0.373. **The spec's stated
-   numbers do not close** — see `DEVIATIONS.md` D3.
-2. **Check 1 on GPT-2** (`results/ladder.csv`, 144 heads, 40 wikitext-103
-   documents). Measured 0.4832 / 0.3026 / 0.1807 against the reference
-   0.5406 / 0.3798 / 0.1608. **It does not reproduce** within the ±0.01 gate.
-   Diagnosed, not tuned — see `DEVIATIONS.md` D4.
-3. **Null length sensitivity** (`results/null_length_sensitivity.csv`). The
-   self-specific fraction moves from **23.5% at T=64 to 41.2% at T=1024**. The
-   null is strongly length-dependent while the observed statistic is nearly
-   flat, so "only N% is self-specific" is a property of the measurement
-   context as much as of the model. This is a finding, and it says Check 1
-   must always be reported with its sequence length.
+**A1, the scale ladder. Nine models to 6.9B.** This is the experiment that
+answers the scale objection, and it is now real data rather than a plan.
+
+| model | params | cos_self | cos_null | excess | % self-specific |
+|---|---|---|---|---|---|
+| gpt2 | 124M | 0.4828 | 0.2987 | 0.1840 | 38.1% |
+| pythia-160m | 160M | 0.4180 | 0.2637 | 0.1544 | 36.9% |
+| gpt2-medium | 355M | 0.4252 | 0.2579 | 0.1674 | 39.4% |
+| pythia-410m | 410M | 0.4022 | 0.1937 | 0.2086 | 51.9% |
+| gpt2-large | 774M | 0.4213 | 0.2117 | 0.2096 | 49.7% |
+| pythia-1.4b | 1.4B | 0.3862 | 0.1900 | 0.1963 | 50.8% |
+| gpt2-xl | 1.5B | 0.3861 | 0.2069 | 0.1792 | 46.4% |
+| pythia-2.8b | 2.8B | 0.3565 | 0.1859 | 0.1705 | 47.8% |
+| **pythia-6.9b** | **6.9B** | **0.3404** | **0.1979** | **0.1425** | **41.9%** |
+
+5,408 head-level rows, 32 documents per model.
+
+**The null declines with scale but does not vanish.** `cos_null` falls from
+0.2637 at 160M to 0.1979 at 6.9B. Machina & Mercer (NAACL 2024) report that
+large Pythia models are isotropic, and that is the sharpest attack on this
+paper's framing. The ladder answers it directly: even at 6.9B, **58% of
+`cos(y_i, v_i)` is still explained by the null**, and across XSA's own tested
+range of 0.7 to 2.7B the self-specific share sits near half (46 to 51%). The
+confound does not disappear at the scale the method was actually trained at.
+
+**A3, grouped-query attention.** Nobody had checked what the self-value
+statistic does when the value vector is shared across a query group.
+
+| model | query/KV heads | within-group excess | across-group excess |
+|---|---|---|---|
+| Qwen2.5-0.5B | 14 / 2 | **+0.2415** | **-0.1876** |
+| Qwen2.5-1.5B | 12 / 2 | **+0.2731** | **-0.1922** |
+
+The self-value similarity is specific to the head's own KV group. Borrowing a
+neighbouring group's value at the same position does not merely lose the
+effect, it goes strongly **negative**. GQA models also show a higher
+self-specific fraction (56 to 59%) than any MHA model on the ladder (37 to
+52%), so the statistic behaves structurally differently under GQA. XSA's Table
+1 reports no KV-head count.
+
+**Day-2 calibration, measured on the real machine.**
+
+| quantity | measured |
+|---|---|
+| throughput, CFG_S | 169,990 tokens/sec |
+| achieved | 34.2 TFLOP/s |
+| diagmask slowdown | **2.36x** |
+
+The spec predicts a 1.5 to 2.0x slowdown for `diagmask`. The measured 2.36x is
+outside that band, so the budget solver weights it accordingly rather than
+using the predicted figure.
+
+**A4, XSA's Figure 1 recomputed.** The equicorrelated-value null reproduces the
+published floor of 0.200 at an effective attention width of 43 keys and
+predicts `cos_self = 0.3682` against the reported 0.373, a gap of 0.005. The
+spec's own stated numbers do not close; see `DEVIATIONS.md` D3.
+
+**Check 1 on GPT-2 does not reproduce its reference values**, and the gate is
+left failing. Measured 0.4828 / 0.2987 / 0.1840 against 0.5406 / 0.3798 /
+0.1608. Sequence length accounts for the null but not the observed statistic;
+see `DEVIATIONS.md` D4 and `results/null_length_sensitivity.csv`.
 
 ---
 

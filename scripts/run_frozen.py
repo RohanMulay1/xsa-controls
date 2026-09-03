@@ -50,7 +50,22 @@ LADDER = [
 #: A3: grouped-query attention. Every model shipped at scale uses GQA or MQA,
 #: and nobody has checked what the self-value statistic does when the value is
 #: shared across a query group.
-GQA_MODELS = ["Qwen/Qwen3-1.7B", "meta-llama/Llama-3.2-1B"]
+#: A3 must run on models that are (a) genuinely grouped-query, (b) ungated,
+#: and (c) supported by the pinned transformers. Qwen3 needs transformers
+#: >= 4.51 and Llama-3.2 is a gated repo, so neither is usable here; both are
+#: kept in GQA_BLOCKED with the reason rather than silently dropped.
+GQA_MODELS = [
+    "Qwen/Qwen2.5-0.5B",       # 14 query heads / 2 KV heads
+    "Qwen/Qwen2.5-1.5B",       # 12 query heads / 2 KV heads
+    "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T",  # 32 / 4
+]
+
+GQA_BLOCKED = {
+    "Qwen/Qwen3-1.7B": "architecture qwen3 needs transformers >= 4.51; this "
+                       "environment pins 4.46.3 for torch 2.4 compatibility",
+    "meta-llama/Llama-3.2-1B": "gated repository, needs an authenticated "
+                               "Hugging Face token",
+}
 
 SMOKE_MODELS = [
     "hf-internal-testing/tiny-random-LlamaForCausalLM",

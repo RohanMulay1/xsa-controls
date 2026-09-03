@@ -24,7 +24,7 @@ import time
 import traceback
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import torch
 
@@ -32,7 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from xsac.checks import check_matched  # noqa: E402
 from xsac.config import (ARMS, PRIMARY_ENDPOINT, SECONDARY_ARMS,  # noqa: E402
-                         ExperimentConfig, TRAIN, size_config, smoke_variant)
+                         ExperimentConfig, TRAIN, TrainConfig, size_config,
+                         smoke_variant)
 from xsac.data import ensure_smoke_data  # noqa: E402
 from xsac.stats import (go_no_go, holm_bonferroni,  # noqa: E402
                         minimum_detectable_effect, paired_test)
@@ -46,10 +47,40 @@ RESULTS = ROOT / "results"
 DATA = ROOT / "data"
 
 
-def cell_config(arm: str, seed: int, size: str, smoke: bool
-                ) -> ExperimentConfig:
+def calibrated_train_config(results_dir: Path, size: str,
+                            override: Optional[float] = None) -> TrainConfig:
+    """Use the budget calibration actually solved for, not the default.
+
+    calibrate.py exists to size ``tokens_per_run`` against measured throughput
+    and the real hourly rate. Nothing consumed its output: the factorial used
+    the 4.5e8 default regardless, so the whole Day-2 gate computed a number
+    that changed nothing. That is fixed here, and the value used is recorded
+    on every run record so a result can be traced to the budget that produced
+    it.
+    """
+    if override is not None:
+        return replace(TRAIN, tokens_per_run=float(override))
+    path = Path(results_dir) / "calibration.json"
+    if not path.exists():
+        return TRAIN
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        budget = payload["sizes"][size]["budget"]
+    except Exception:
+        return TRAIN
+    tokens = budget.get("tokens_per_run")
+    if not tokens:
+        return TRAIN
+    print("  using calibrated budget: {:.3g} tokens/run "
+          "(affordable={}, cuts={})".format(
+              tokens, budget.get("affordable"), budget.get("cuts_applied")))
+    return replace(TRAIN, tokens_per_run=float(tokens))
+
+
+def cell_config(arm: str, seed: int, size: str, smoke: bool,
+                train_cfg: Optional[TrainConfig] = None) -> ExperimentConfig:
     cfg = ExperimentConfig(arm=arm, seed=seed, size=size,
-                           model=size_config(size), train=TRAIN)
+                           model=size_config(size), train=train_cfg or TRAIN)
     return smoke_variant(cfg) if smoke else cfg
 
 
@@ -174,6 +205,9 @@ def main(argv=None) -> int:
     ap.add_argument("--device", default=None)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--n-seeds-planned", type=int, default=8)
+    ap.add_argument("--tokens-per-run", type=float, default=None,
+                    help="override the calibrated budget; recorded on every "
+                         "run so the number is traceable")
     args = ap.parse_args(argv)
 
     seeds = args.seeds[:1] if args.pilot else args.seeds
@@ -182,8 +216,10 @@ def main(argv=None) -> int:
                              "factorial_{}".format(args.size.lower()))
     results_dir.mkdir(parents=True, exist_ok=True)
 
+    train_cfg = calibrated_train_config(RESULTS, args.size,
+                                        args.tokens_per_run)
     if args.smoke:
-        cfg0 = cell_config("baseline", 0, args.size, True)
+        cfg0 = cell_config("baseline", 0, args.size, True, train_cfg)
         ensure_smoke_data(DATA, cfg0.model.vocab_size)
 
     print("factorial: size={} arms={} seeds={} device={} smoke={}".format(
@@ -191,7 +227,7 @@ def main(argv=None) -> int:
     for seed in seeds:
         print("  seed {}".format(seed))
         for arm in args.arms:
-            cfg = cell_config(arm, seed, args.size, args.smoke)
+            cfg = cell_config(arm, seed, args.size, args.smoke, train_cfg)
             rec = run_cell(cfg, DATA, results_dir, device, args.force)
             if rec.is_numeric:
                 print("    {:9s} val_loss {:.6f}  tokens {}  {:.1f}s".format(
