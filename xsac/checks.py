@@ -178,6 +178,12 @@ class NullResult:
     ci_low: float = float("nan")
     ci_high: float = float("nan")
     label: str = ""
+    #: What the two quantities are called. Defaults describe the XSA case, but
+    #: Check 1 applies to any statistic with a null, and printing
+    #: "cos(y_i, v_i)" beside an attention mass or an activation magnitude
+    #: would mislabel a correct number.
+    stat_name: str = "cos(y_i, v_i)"
+    null_name: str = "cos(y_i, v_j)"
 
     @property
     def passed(self) -> bool:
@@ -189,10 +195,14 @@ class NullResult:
             " [{}]".format(self.label) if self.label else "",
             "statistic survives" if self.passed
             else "MOST OF THE STATISTIC IS THE NULL")
+        width = max(len(self.stat_name), len(self.null_name), 14)
         lines = [head,
-                 "  observed cos(y_i, v_i) = {:.4f}".format(self.cos_self),
-                 "  null     cos(y_i, v_j) = {:.4f}".format(self.cos_null),
-                 "  excess                 = {:.4f}".format(self.excess)]
+                 "  observed {:<{w}} = {:.4f}".format(
+                     self.stat_name, self.cos_self, w=width),
+                 "  null     {:<{w}} = {:.4f}".format(
+                     self.null_name, self.cos_null, w=width),
+                 "  excess   {:<{w}} = {:.4f}".format("", self.excess,
+                                                      w=width)]
         if math.isfinite(self.ci_low):
             lines.append("  excess 95% CI          = [{:.4f}, {:.4f}]  n = {}"
                          .format(self.ci_low, self.ci_high, self.n))
@@ -323,7 +333,9 @@ def check_resolvability(effect_half_a: Sequence[float],
 
 
 def check_null(cos_self, cos_null, label: str = "",
-               paired: bool = True, seed: int = 0) -> NullResult:
+               paired: bool = True, seed: int = 0,
+               stat_name: str = "cos(y_i, v_i)",
+               null_name: str = "cos(y_i, v_j)") -> NullResult:
     """Check 1. How much of a similarity statistic survives its null?
 
     Accepts either two scalars (already-averaged values, as reported in a
@@ -343,7 +355,8 @@ def check_null(cos_self, cos_null, label: str = "",
         excess = s - nl
         frac = excess / s if s != 0 else float("nan")
         return NullResult(cos_self=s, cos_null=nl, excess=excess,
-                          self_specific_fraction=frac, n=1, label=label)
+                          self_specific_fraction=frac, n=1, label=label,
+                          stat_name=stat_name, null_name=null_name)
 
     a = [float(x) for x in cos_self]
     b = [float(x) for x in cos_null]
@@ -364,7 +377,8 @@ def check_null(cos_self, cos_null, label: str = "",
     frac = excess / mean_s if mean_s not in (0.0,) else float("nan")
     return NullResult(cos_self=mean_s, cos_null=mean_n, excess=excess,
                       self_specific_fraction=frac, n=int(n),
-                      ci_low=lo, ci_high=hi, label=label)
+                      ci_low=lo, ci_high=hi, label=label,
+                      stat_name=stat_name, null_name=null_name)
 
 
 def check_matched(treatment: Sequence[float], control: Sequence[float],
