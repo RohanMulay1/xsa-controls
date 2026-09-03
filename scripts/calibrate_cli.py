@@ -29,6 +29,12 @@ def main(argv=None) -> int:
     ap.add_argument("--rate", type=float, default=None,
                     help="ACTUAL USD/hr for this machine")
     ap.add_argument("--n-runs", type=int, default=43)
+    ap.add_argument("--cost-ceiling", type=float, default=None,
+                    help="USD available for the training leg. Defaults to the "
+                         "spec's $56. Pass the real figure: the budget solver "
+                         "sheds work in priority order when it cannot afford "
+                         "the token floor, and that decision must be based on "
+                         "money that actually exists.")
     ap.add_argument("--steps", type=int, default=50)
     ap.add_argument("--micro-batch", type=int, default=4)
     ap.add_argument("--device", default=None)
@@ -41,9 +47,12 @@ def main(argv=None) -> int:
     micro = 2 if args.smoke else args.micro_batch
     rate = args.rate if args.rate is not None else L40S_RATE_PLACEHOLDER
 
+    from xsac.config import COST_CEILING_TRAIN
+    ceiling = args.cost_ceiling if args.cost_ceiling is not None else COST_CEILING_TRAIN
     payload = calibrate(configs, TRAIN, args.n_runs, rate_usd_hr=rate,
                         steps=steps, micro_batch=micro, device=args.device,
-                        rate_is_placeholder=args.rate is None)
+                        rate_is_placeholder=args.rate is None,
+                        cost_ceiling=ceiling)
     out = ROOT / "results" / ("calibration_smoke.json" if args.smoke
                               else "calibration.json")
     write_calibration(payload, out)

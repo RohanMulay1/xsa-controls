@@ -152,9 +152,14 @@ class CausalSelfAttention(nn.Module):
             if self.diagmask_hard:
                 att[..., idx, idx] = float("-inf")
             else:
+                # .to(att.dtype) is required, not cosmetic. Under bf16
+                # autocast the scores are bfloat16 while the gate arithmetic
+                # stays float32, and an index-put across dtypes raises. This
+                # crashed every diagmask run on GPU while passing on CPU,
+                # where no autocast is active. test_model.py pins it.
                 gate = torch.tanh(self.diag_alpha).view(1, -1, 1)
-                att[..., idx, idx] = (att[..., idx, idx]
-                                      - gate * DIAG_MASK_STRENGTH)
+                penalty = (gate * DIAG_MASK_STRENGTH).to(att.dtype)
+                att[..., idx, idx] = att[..., idx, idx] - penalty
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
         return att @ v, att

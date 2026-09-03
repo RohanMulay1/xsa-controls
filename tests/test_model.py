@@ -214,3 +214,46 @@ class TestAttentionPaths:
         m = GPT(CFG_TINY)
         with pytest.raises(ValueError):
             m(torch.zeros(1, CFG_TINY.block_size + 1, dtype=torch.long))
+
+
+class TestAutocastPaths:
+    """Every arm must survive bf16 autocast.
+
+    The gated diagmask path did an index-put of a float32 penalty into a
+    bfloat16 score tensor. On CPU there is no autocast so it passed; on GPU it
+    raised on the first step and would have killed every diagmask run in the
+    factorial. These tests run under CPU autocast, which reproduces the dtype
+    mismatch without needing a GPU.
+    """
+
+    @pytest.mark.parametrize("arm", list(ARMS))
+    def test_arm_runs_under_bfloat16_autocast(self, arm):
+        torch.manual_seed(0)
+        model = GPT(CFG_TINY, arm=arm)
+        model.train()
+        idx = torch.randint(0, CFG_TINY.vocab_size, (2, 16))
+        tgt = torch.randint(0, CFG_TINY.vocab_size, (2, 16))
+        with torch.autocast("cpu", dtype=torch.bfloat16):
+            _, loss = model(idx, tgt)
+        assert torch.isfinite(loss)
+
+    def test_hard_diagmask_also_survives_autocast(self):
+        torch.manual_seed(0)
+        model = GPT(CFG_TINY, arm="diagmask", diagmask_hard=True)
+        idx = torch.randint(0, CFG_TINY.vocab_size, (2, 16))
+        tgt = torch.randint(0, CFG_TINY.vocab_size, (2, 16))
+        with torch.autocast("cpu", dtype=torch.bfloat16):
+            _, loss = model(idx, tgt)
+        assert torch.isfinite(loss)
+
+    def test_gradients_flow_under_autocast(self):
+        torch.manual_seed(0)
+        model = GPT(CFG_TINY, arm="diagmask")
+        model.train()
+        idx = torch.randint(0, CFG_TINY.vocab_size, (2, 16))
+        tgt = torch.randint(0, CFG_TINY.vocab_size, (2, 16))
+        with torch.autocast("cpu", dtype=torch.bfloat16):
+            _, loss = model(idx, tgt)
+        loss.backward()
+        grads = [b.attn.diag_alpha.grad for b in model.h]
+        assert all(g is not None and torch.isfinite(g).all() for g in grads)

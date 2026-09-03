@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -148,4 +149,12 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    _rc = main()
+    # The streaming dataset keeps a background prefetch thread alive, and the
+    # interpreter can abort during finalisation with a GIL error *after* the
+    # files are written and verified. That turns a successful run into a
+    # non-zero exit and stops any orchestrator that checks return codes. The
+    # work is complete and verified by this point, so exit deterministically.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(_rc)

@@ -25,11 +25,12 @@ import math
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import torch
 
-from xsac.config import (COST_CEILING_TRAIN, L40S_PEAK_TFLOPS_BF16,
+from xsac.config import (COST_CEILING_TRAIN, COST_STOP_AND_REPORT,
+                         L40S_PEAK_TFLOPS_BF16,
                          L40S_RATE_PLACEHOLDER, ModelConfig, TrainConfig)
 from xsac.model import GPT
 
@@ -118,38 +119,105 @@ def solve_token_budget(tokens_per_sec: float, n_runs: int, rate_usd_hr: float,
 
     step = train_cfg.batch_tokens
     rounded = math.floor(raw / step) * step
+
+    # Clamping UP to the floor does not make the plan affordable, it only
+    # hides that it is not. When the budget cannot reach 3.5e8 tokens per run,
+    # the spec's priority order says to shed work rather than shrink the
+    # primary endpoint: drop the CFG_M scale check first (9 runs), then the
+    # secondary arms (10 runs). Each cut is re-solved, so the returned budget
+    # is one that can actually be paid for.
+    cuts: List[Dict[str, Any]] = []
+    effective_n = n_runs
+    while rounded < train_cfg.tokens_min and cuts_available(cuts):
+        cut = next_cut(cuts)
+        effective_n = max(1, effective_n - cut["runs"])
+        cuts.append(cut)
+        raw = (hours * 3600.0 * tokens_per_sec) / (
+            effective_n * max(1.0, diagmask_slowdown))
+        rounded = math.floor(raw / step) * step
+
+    affordable = rounded >= train_cfg.tokens_min
     clamped = min(max(rounded, train_cfg.tokens_min), train_cfg.tokens_max)
     clamped = math.floor(clamped / step) * step
+
+    # What the plan will actually cost at the returned budget, so the $66
+    # stop-and-report threshold can be enforced instead of merely declared.
+    seconds_needed = (clamped * effective_n * max(1.0, diagmask_slowdown)
+                      / tokens_per_sec)
+    projected_usd = seconds_needed / 3600.0 * rate_usd_hr
 
     return {
         "hours_available": hours,
         "rate_usd_hr": rate_usd_hr,
         "cost_ceiling": cost_ceiling,
         "n_runs": n_runs,
+        "n_runs_after_cuts": effective_n,
         "diagmask_slowdown": diagmask_slowdown,
         "tokens_per_run_raw": raw,
         "tokens_per_run_rounded": rounded,
         "tokens_per_run": float(clamped),
-        "clamped_low": rounded < train_cfg.tokens_min,
+        "clamped_low": not affordable,
         "clamped_high": rounded > train_cfg.tokens_max,
-        # If the clamp binds low, the CFG_M scale check is dropped FIRST and
-        # the decision goes into BUDGET.md with its arithmetic. Cutting the
-        # primary endpoint's seeds instead would be cutting the paper.
-        "drop_cfg_m": bool(rounded < train_cfg.tokens_min),
-        "note": ("budget forces below the 3.5e8 floor: drop the CFG_M scale "
-                 "check and put the time into CFG_S seeds"
-                 if rounded < train_cfg.tokens_min else ""),
+        "affordable": bool(affordable),
+        "cuts_applied": [c["name"] for c in cuts],
+        "drop_cfg_m": any(c["name"] == "cfg_m_scale_check" for c in cuts),
+        "drop_secondary_arms": any(
+            c["name"] == "secondary_arms" for c in cuts),
+        "projected_spend_usd": projected_usd,
+        "over_stop_threshold": bool(projected_usd > COST_STOP_AND_REPORT),
+        "stop_threshold_usd": COST_STOP_AND_REPORT,
+        "note": _budget_note(affordable, cuts, projected_usd),
     }
+
+
+#: Priority order from spec section 12: cut from the bottom, and never cut the
+#: primary endpoint below 8 seeds or drop A1.
+CUT_ORDER = [
+    {"name": "cfg_m_scale_check", "runs": 9,
+     "why": "the scale check is the first thing to go; the primary endpoint "
+            "and A1 are the paper"},
+    {"name": "secondary_arms", "runs": 10,
+     "why": "meanval and diagmask are secondary; the pre-registered primary "
+            "endpoint keeps its 8 seeds"},
+]
+
+
+def cuts_available(cuts: Sequence[Dict[str, Any]]) -> bool:
+    return len(cuts) < len(CUT_ORDER)
+
+
+def next_cut(cuts: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    return dict(CUT_ORDER[len(cuts)])
+
+
+def _budget_note(affordable: bool, cuts: Sequence[Dict[str, Any]],
+                 projected: float) -> str:
+    bits = []
+    if cuts:
+        bits.append("budget did not reach the 3.5e8 floor, so {} were dropped "
+                    "and the budget re-solved".format(
+                        " then ".join(c["name"] for c in cuts)))
+    if not affordable:
+        bits.append("STILL below the floor after every permitted cut. The "
+                    "design is not affordable at this rate; stop and report "
+                    "rather than shrinking the primary endpoint")
+    if projected > COST_STOP_AND_REPORT:
+        bits.append("projected spend ${:.2f} exceeds the ${:.2f} "
+                    "stop-and-report threshold".format(
+                        projected, COST_STOP_AND_REPORT))
+    return "; ".join(bits)
 
 
 def calibrate(configs: Dict[str, ModelConfig], train_cfg: TrainConfig,
               n_runs: int, rate_usd_hr: float = L40S_RATE_PLACEHOLDER,
               steps: int = 50, micro_batch: int = 4,
               device: Optional[str] = None,
-              rate_is_placeholder: bool = True) -> Dict[str, Any]:
+              rate_is_placeholder: bool = True,
+              cost_ceiling: float = COST_CEILING_TRAIN) -> Dict[str, Any]:
     """Full Day-2 calibration for every model size."""
     out: Dict[str, Any] = {"rate_usd_hr": rate_usd_hr,
                            "rate_is_placeholder": bool(rate_is_placeholder),
+                           "cost_ceiling": cost_ceiling,
                            "sizes": {}}
     if rate_is_placeholder:
         out["warning"] = (
@@ -166,6 +234,7 @@ def calibrate(configs: Dict[str, ModelConfig], train_cfg: TrainConfig,
                     if base["seconds_per_step"] > 0 else float("nan"))
         budget = solve_token_budget(base["tokens_per_sec"], n_runs,
                                     rate_usd_hr, train_cfg,
+                                    cost_ceiling=cost_ceiling,
                                     diagmask_slowdown=slowdown)
         out["sizes"][name] = {
             "config": asdict(cfg),
