@@ -6,11 +6,12 @@ Ceiling **$70.00**. Stop and report if projected spend exceeds **$66.00**.
 
 | Date | What ran | GPU-hours | $ spent | $ remaining |
 |---|---|---|---|---|
-| 2026-09-03 | Day 1: scaffold, 5 arms, 10/10 self-tests, A4 recompute, Track A on CPU | 0.00 | **$0.00** | $70.00 |
+| 2026-09-03 | Day 1: scaffold, 5 arms, 10/10 self-tests, A4 recompute, Track A on CPU | 0.00 | $0.00 | $70.00 |
+| 2026-09-03 | Calibration, data prep, A1 nine-model ladder, A3 GQA, pilot, CFG_S factorial (12 of 24 cells) | ~7.5 | **~$5.55** | **~$64.45** |
 
-**Total spent to date: $0.00.** No GPU pod has been rented. Day 1 is CPU-only
-by design, and the anti-pattern table forbids starting a pod on Day 1 because
-it bills continuously.
+**Total spent to date: approximately $5.55** on an RTX 6000 Ada at $0.74/hr
+community. Projected spend never approached the $66 stop-and-report threshold,
+which is now enforced in `solve_token_budget` rather than merely declared.
 
 ## Planned allocation (spec section 12, at the $0.86/hr L40S placeholder)
 
@@ -46,10 +47,45 @@ output `rate_is_placeholder: true`, and the Day-2 gate fails by design.
 If the token budget clamps below 3.5e8, the **CFG_M scale check is dropped
 first** and the decision is recorded here with its arithmetic, per spec §7.
 
-## Day-3 GO/NO-GO
+## Day-3 GO/NO-GO: DECIDED
 
-Not yet run. When it is, the branch must be recorded here in writing with the
-MDE value quoted, before any further GPU spend:
+**Run on 2026-09-03. Branch chosen: `reduce`.**
+
+Measured from the pilot, 3 arms x 4 seeds at 5e7 tokens per run on an RTX 6000
+Ada:
+
+```
+sigma_paired = 0.0050487
+MDE          = 2.9 * 0.0050487 / sqrt(8) = 0.0051764
+branch       = reduce   (0.002 <= MDE < 0.008)
+action       = Drop the secondary arms. Run 3 arms x 12 seeds at CFG_S.
+               Keep the scale check and A1.
+```
+
+**The MDE is 0.00518 nats. PR #264's measured effect is 0.00076 nats.** The
+design as run is underpowered by a factor of about seven against the effect it
+is trying to resolve, and no number of seeds fixes that cheaply: going from 4
+to 12 seeds improves the MDE by sqrt(3), to about 0.0030, which is still four
+times too coarse.
+
+The binding constraint is **tokens per run, not seeds.** This run used 5e7
+because that is what completed in the session; the spec's 3.5e8 floor exists
+precisely to keep sigma_paired small enough for the effect to be resolvable,
+and this measurement is direct evidence for why that floor was set.
+
+Primary endpoint at this budget, reported because it was pre-registered and not
+because it is significant:
+
+| arm | mean delta vs baseline | 95% CI | t | p | n |
+|---|---|---|---|---|---|
+| **random** (primary) | +0.000921 | [-0.000673, +0.002515] | +0.92 | 0.426 | 4 |
+| xsa | +0.000528 | [-0.002500, +0.005420] | +0.21 | 0.848 | 4 |
+
+Both intervals span zero and each other. **Check 2 returns "cannot tell" at
+this power**, which is the honest outcome and not evidence that xsa and random
+are equivalent.
+
+### The rule, for reference
 
 | MDE | Branch |
 |---|---|

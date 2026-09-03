@@ -1,0 +1,2 @@
+sigma_paired,mde,n_seeds_planned,branch,action,proceed
+0.005048673294313334,0.005176429127486357,8,reduce,Drop the secondary arms. Run 3 arms x 12 seeds at CFG_S. Keep the scale check and A1.,True
