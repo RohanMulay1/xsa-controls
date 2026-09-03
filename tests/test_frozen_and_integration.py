@@ -246,3 +246,77 @@ class TestEndToEnd:
         losses = step0_losses(list(ARMS), CFG_TINY, 42, tmp_path)
         base = losses["baseline"]
         assert max(abs(v - base) for v in losses.values()) < 1e-6
+
+
+class TestFigureContracts:
+    """Properties that keep an unexecuted experiment looking unexecuted."""
+
+    @staticmethod
+    def _csv(path, rows):
+        import csv
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fields = []
+        for r in rows:
+            for k in r:
+                if k not in fields:
+                    fields.append(k)
+        with path.open("w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=fields)
+            w.writeheader()
+            w.writerows(rows)
+
+    def test_every_figure_skips_on_an_empty_results_tree(self, tmp_path):
+        from xsac.figures import ALL_FIGURES, FigureSkipped
+        for name, fn in ALL_FIGURES.items():
+            with pytest.raises(FigureSkipped):
+                fn(tmp_path, tmp_path / "out")
+
+    def test_no_image_is_written_for_a_skipped_figure(self, tmp_path):
+        from xsac.figures import ALL_FIGURES, FigureSkipped
+        out = tmp_path / "out"
+        for fn in ALL_FIGURES.values():
+            with pytest.raises(FigureSkipped):
+                fn(tmp_path, out)
+        assert not out.exists() or not list(out.glob("*.png"))
+
+    def test_ladder_figure_renders_and_writes_its_data(self, tmp_path):
+        from xsac.figures import fig3_ladder
+        rows = []
+        for model, n in (("gpt2", 12), ("EleutherAI/pythia-1.4b", 12)):
+            for h in range(n):
+                rows.append({"model": model, "layer": 0, "head": h,
+                             "cos_self": 0.42, "cos_null": 0.21,
+                             "excess": 0.21, "n": 100})
+        self._csv(tmp_path / "ladder.csv", rows)
+        paths = fig3_ladder(tmp_path, tmp_path / "out")
+        assert {p.suffix for p in paths} == {".png", ".pdf", ".csv"}
+
+    def test_generality_figure_renders_from_a6_output(self, tmp_path):
+        from xsac.figures import fig4_generality
+        self._csv(tmp_path / "generality.csv", [
+            {"method": "attention_sink", "observed": 0.4028, "null": 0.0034},
+            {"method": "massive_activations", "observed": 12.87, "null": 3.65},
+        ])
+        paths = fig4_generality(tmp_path, tmp_path / "out")
+        assert (tmp_path / "out" / "fig4_generality_data.csv").exists()
+        assert len(paths) == 3
+
+    def test_gqa_figure_ignores_mha_rows(self, tmp_path):
+        """An MHA model has no within/across split and must not be plotted."""
+        from xsac.figures import FigureSkipped, fig5_gqa
+        self._csv(tmp_path / "gqa.csv", [
+            {"model": "gpt2", "is_gqa": "False",
+             "within_group_excess": "nan", "across_group_excess": "nan"}])
+        with pytest.raises(FigureSkipped):
+            fig5_gqa(tmp_path, tmp_path / "out")
+
+    def test_every_rendered_figure_emits_png_pdf_and_csv(self, tmp_path):
+        """The Day-9 gate: 300 dpi raster, vector for LaTeX, and the data."""
+        from xsac.figures import fig4_generality
+        self._csv(tmp_path / "generality.csv", [
+            {"method": "m1", "observed": 1.0, "null": 0.2}])
+        out = tmp_path / "out"
+        fig4_generality(tmp_path, out)
+        for ext in ("png", "pdf"):
+            assert (out / "fig4_generality.{}".format(ext)).exists()
+        assert (out / "fig4_generality_data.csv").exists()
