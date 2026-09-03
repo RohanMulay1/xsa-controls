@@ -30,8 +30,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from xsac.checks import check_matched  # noqa: E402
-from xsac.config import (ARMS, PRIMARY_ENDPOINT, SECONDARY_ARMS,  # noqa: E402
+from xsac.config import (ARMS, PRIMARY_ENDPOINT,  # noqa: E402
                          ExperimentConfig, TRAIN, TrainConfig, size_config,
                          smoke_variant)
 from xsac.data import ensure_smoke_data  # noqa: E402

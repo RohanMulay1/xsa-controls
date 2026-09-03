@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -13,7 +12,7 @@ from xsac.config import CFG_TINY, ExperimentConfig, TRAIN, smoke_variant
 from xsac.data import (FixedEvalLoader, PairedLoader, TokenDataset,
                        ensure_smoke_data, synthetic_tokens)
 from xsac.runmeta import (NUMERIC_STATUSES, STATUSES, RunRecord,
-                          canonical_json, is_done, numeric_records,
+                          is_done, numeric_records,
                           read_records, records_to_rows, run_id, write_csv,
                           write_record)
 
