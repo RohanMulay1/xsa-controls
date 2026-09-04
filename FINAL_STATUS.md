@@ -11,9 +11,9 @@
 
 | | Start of engagement | Now |
 |---|---|---|
-| Completion | 4/10 | **8.5/10** |
+| Completion | 4/10 | **9.5/10** |
 | Quality | 8/10 | **9.5/10** |
-| Tests | 139 | **214** |
+| Tests | 139 | **241** |
 | Coverage | 74% | **90%** |
 | `calibrate.py` coverage | **0%** | **96%** |
 | Experiments executed | 3, all CPU | A1 ladder to 6.9B, A3 GQA, A6, calibration, pilot, **24-cell CFG_S factorial**, GPT-2 diagnosis |
@@ -21,8 +21,10 @@
 | Paper artifacts (tables, manifest, repro, example) | 0 | **T1-T4 + T6, self-verifying manifest, REPRODUCE.md, worked example** |
 | Day gates passing | 1 | **1, 2, 3, 8, 9, 10** |
 
-Not 10/10. Days 4-6 sit at 4/5 and Day 7 at 3/4; both reasons are given below
-and neither is a gap I chose to leave.
+Not 10/10. Days 4-6 sit at 6/8 because the CFG_M factorial has not been run,
+which is a wall-clock problem (~51 GPU-hours) rather than a money one; about
+$60 of the $70 ceiling remains. Day 7 is 4/5 and is left failing deliberately:
+see below.
 
 ---
 
@@ -68,6 +70,25 @@ debunking uniformly.
 repository it returned UNRESOLVABLE with a ceiling of 0.102 on any observable
 correlation, and that project withdrew its headline claim.
 
+**6. The statistic does not predict its own intervention, in two models of
+three.** A2a first: the per-head XSA effect is resolvable, split-half
+`r_delta` +0.752 in GPT-2 and +0.304 and +0.446 in the two Pythia sizes,
+against `r_stat` above +0.97 everywhere. Rank agreement rises monotonically
+with evaluation budget, so the attenuation is a sample-size limit.
+
+Then A2. In both Pythia models the raw self-value cosine carries essentially
+no information about the measured effect of removing it, rho +0.001 and
++0.039, while the null-corrected excess predicts it, +0.396 and +0.393 raw and
++0.723 and +0.596 disattenuated. **In GPT-2 the ordering reverses**, +0.450
+against +0.190. Reported, not averaged away: the claim is that whether a raw
+statistic predicts its own intervention is model-dependent, which is narrower
+than the result we would have preferred.
+
+**7. The across-group reversal is not a Qwen artifact.** TinyLlama-1.1B, a
+Llama architecture at 32 query heads over 4 KV heads, gives across-group
+excess -0.1126 against Qwen's -0.1876 and -0.1922. The sign replicates across
+families; the magnitude is about 40% smaller and is reported as such.
+
 ---
 
 ## Definition of done
@@ -77,9 +98,9 @@ correlation, and that project withdrew its headline claim.
 | 1 | 10 self-tests green | **DONE** | 10/10, step-0 deviation 0.000e+00 |
 | 2 | `factorial_s.csv` / `factorial_m.csv` | **DONE / not run** | CFG_S complete at 24 cells. CFG_M dropped by the budget solver in priority order; an out-of-band attempt was abandoned, see blockers |
 | 3 | `paired_tests.csv` | **DONE** | n=8, primary first and labelled, Holm over secondaries only |
-| 4 | `reliability.csv` (A2a) | **DONE as code, applied in the field** | Not run against a frozen model here; it was run for real on another project |
+| 4 | `reliability.csv` (A2a) and `a2_correlations.csv` (A2) | **DONE** | Run on GPT-2 and two Pythia sizes; the A@V reconstruction gate passes first |
 | 5 | `ladder.csv`, nine models to 6.9B | **DONE** | 5,408 head rows |
-| 6 | `gqa.csv` | **DONE** | Two real GQA models |
+| 6 | `gqa.csv` | **DONE** | Three GQA models across two architecture families |
 | 7 | `generality.csv` (A6) | **DONE per spec** | Spec requires two minimum; two measured, two recorded blocked with reasons |
 | 8 | Figures 1-5 | **DONE** | All five from real data, png + pdf + source CSV each |
 | 9 | `checks.py` clean API | **DONE** | 91% covered |
