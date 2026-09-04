@@ -10,3 +10,4 @@ Qwen/Qwen2.5-1.5B,12,2,56,True,336,6,0.2731452193544608,-0.1922146026692474,,com
 EleutherAI/pythia-2.8b,32,32,1024,False,1024,1,nan,nan,n_kv_heads == n_query_heads: this model is MHA and the within/across split does not exist,completed
 gpt2,12,12,144,False,144,1,nan,nan,n_kv_heads == n_query_heads: this model is MHA and the within/across split does not exist,completed
 gpt2-large,20,20,720,False,720,1,nan,nan,n_kv_heads == n_query_heads: this model is MHA and the within/across split does not exist,completed
+TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T,32,4,88,True,704,8,0.23733443375483418,-0.1126472965588957,,completed

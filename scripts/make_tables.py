@@ -111,8 +111,14 @@ def table1_ladder():
     # The ladder holds both MHA and GQA models. Table 1 is the MHA scale
     # ladder; the GQA models have their own table because the within/across
     # group split does not exist without grouped-query attention.
-    mha = [r for r in rows if int(r["n_kv_heads"]) == int(r.get("n_kv_heads"))
-           and not r["model"].startswith("Qwen")]
+    #
+    # Which models are GQA is read from gqa.csv rather than pattern-matched on
+    # the name. Matching on "Qwen" silently classified TinyLlama as MHA the
+    # moment a second GQA family was added.
+    gqa_rows = read("gqa.csv") or []
+    gqa_models = {r["model"] for r in gqa_rows
+                  if str(r.get("is_gqa")).lower() == "true"}
+    mha = [r for r in rows if r["model"] not in gqa_models]
     agg = _by_model(mha)
     out = []
     for model, rs in agg.items():

@@ -19,6 +19,7 @@ recite a loop.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 import time
@@ -174,12 +175,49 @@ def check_gpt2_target(record: RunRecord) -> dict:
             "reproduces": bool(ok)}
 
 
+
+def write_csv_no_shrink(rows, path, key, allow_shrink=False):
+    """Write a results CSV, refusing to silently drop models already in it.
+
+    ``ladder.csv`` is rebuilt from every record on disk. Run the script on a
+    machine holding only a subset of the records -- a fresh pod, a cleaned
+    results directory -- and it rebuilds the file from that subset and
+    overwrites a complete committed CSV with a partial one. It happened: a GQA
+    run on a fresh pod cut ladder.csv from 11 models and 6,080 rows to 3
+    models and 1,376, and the only signal was a smaller number in a log line
+    nobody reads.
+
+    Losing measured data is not a normal outcome of re-running a measurement,
+    so it has to be asked for explicitly.
+    """
+    existing = set()
+    if path.exists():
+        with path.open(encoding="utf-8") as fh:
+            existing = {r[key] for r in csv.DictReader(fh) if r.get(key)}
+    incoming = {r.get(key) for r in rows if r.get(key)}
+    lost = existing - incoming
+    if lost and not allow_shrink:
+        raise SystemExit(
+            "REFUSING TO WRITE {}: it currently holds {} that this run did "
+            "not measure ({}). Rebuilding from the records on this machine "
+            "would delete them. Copy the missing run records here, or pass "
+            "--allow-shrink if the removal is deliberate.".format(
+                path.name, key + "s", ", ".join(sorted(lost))))
+    if lost:
+        print("  WARNING: dropping {} {} from {} at explicit request: {}"
+              .format(len(lost), key + "s", path.name, ", ".join(sorted(lost))))
+    write_csv(rows, path)
+
 def main(argv=None) -> int:
     warnings.filterwarnings("ignore")
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--models", nargs="*", default=None)
     ap.add_argument("--ladder", action="store_true", help="the nine-model ladder")
     ap.add_argument("--gqa", action="store_true", help="the A3 GQA models")
+    ap.add_argument("--allow-shrink", action="store_true",
+                    help="permit rebuilding a results CSV without models it "
+                         "currently contains. Deletes measured data; only "
+                         "pass it when that is the intent.")
     ap.add_argument("--smoke", action="store_true", help="tiny models, CPU")
     ap.add_argument("--n-docs", type=int, default=64)
     ap.add_argument("--block", type=int, default=512)
@@ -251,7 +289,8 @@ def main(argv=None) -> int:
         for head in r.metrics.get("per_head", []):
             rows.append({**head, "status": r.status, "run_id": r.run_id})
     if rows:
-        write_csv(rows, RESULTS / "ladder.csv")
+        write_csv_no_shrink(rows, RESULTS / "ladder.csv", "model",
+                            args.allow_shrink)
         print("\nwrote results/ladder.csv ({} head rows from {} models)".format(
             len(rows), len(records)))
 
@@ -259,7 +298,8 @@ def main(argv=None) -> int:
                  **r.metrics.get("gqa", {}), "status": r.status}
                 for r in records if r.metrics.get("gqa")]
     if gqa_rows:
-        write_csv(gqa_rows, RESULTS / "gqa.csv")
+        write_csv_no_shrink(gqa_rows, RESULTS / "gqa.csv", "model",
+                            args.allow_shrink)
     return 0
 
 
