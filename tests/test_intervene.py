@@ -83,6 +83,24 @@ class TestReconstructionGate:
         m = verify_reconstruction(probe, ids, 0)
         assert m["max_rel_error"] < 1e-4
 
+    def test_nan_fails_closed(self, neox, ids, monkeypatch):
+        """`nan > tol` is False, so the natural form of the comparison lets a
+        reconstruction that produced no usable numbers through as a pass."""
+        import xsac.intervene as mod
+        real = neox._values_from_hidden
+
+        def poisoned(layer_idx, x):
+            v = real(layer_idx, x)
+            if v is None:
+                return None
+            v = v.clone()
+            v[..., 0] = float("nan")
+            return v
+
+        monkeypatch.setattr(neox, "_values_from_hidden", poisoned)
+        with pytest.raises(ReconstructionError):
+            mod.verify_reconstruction(neox, ids, 0)
+
     def test_a_wrong_expansion_is_caught(self, neox, ids, monkeypatch):
         """Corrupt the value vectors and confirm the gate fails. A gate that
         cannot fail is not a gate."""

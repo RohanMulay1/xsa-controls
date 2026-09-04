@@ -122,6 +122,21 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
     if all_ids.shape[0] < 4:
         raise SystemExit("need at least 4 documents to split into halves")
 
+    # A model whose plain forward is not finite cannot be measured at all.
+    # Without this check the NaN deltas propagate into r_delta and the model
+    # is reported as UNRESOLVABLE, which says the effect is too noisy to
+    # measure. That is a scientific claim, and it would be the wrong one:
+    # nothing was measured. Pythia in float32 and float16 on transformers
+    # 5.16.1 does exactly this; bfloat16 is fine.
+    with torch.no_grad():
+        probe_logits = probe.model(all_ids[:1], use_cache=False).logits
+    if not torch.isfinite(probe_logits).all():
+        raise RuntimeError(
+            "{} produces non-finite logits in {} on a plain forward with no "
+            "intervention. This is a model/precision failure, not an "
+            "unresolvable effect, and it must not be reported as one. Try "
+            "--dtype bfloat16.".format(model_id, dtype))
+
     # The gate. Nothing below is trusted until this passes.
     print("  A@V reconstruction gate:")
     gate = {}

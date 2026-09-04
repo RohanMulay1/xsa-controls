@@ -236,13 +236,18 @@ def verify_reconstruction(probe, ids: torch.Tensor, layer_idx: int,
                "mean_abs_error": diff.abs().mean().item(),
                "reference_scale": denom,
                "layer": float(layer_idx)}
-    if metrics["rel_frobenius_error"] > tol:
+    # NaN must fail. `nan > tol` is False, so the obvious form of this check
+    # lets a reconstruction that produced no usable numbers through as a pass,
+    # which is the failure mode this gate exists to prevent.
+    err = metrics["rel_frobenius_error"]
+    if not (err <= tol):
         raise ReconstructionError(
             "A @ expand_kv(V) does not reproduce the attention output at "
             "layer {}: relative Frobenius error {:.3e} exceeds {:.0e}. The "
-            "head layout, the KV expansion or the projection point is wrong; "
-            "no per-head number from this model can be trusted.".format(
-                layer_idx, metrics["rel_frobenius_error"], tol))
+            "head layout, the KV expansion or the projection point is wrong, "
+            "or the forward produced non-finite values; either way no "
+            "per-head number from this model can be trusted.".format(
+                layer_idx, err, tol))
     return metrics
 
 
