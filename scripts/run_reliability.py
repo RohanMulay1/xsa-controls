@@ -128,8 +128,8 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
     for li in (0, n_layers // 2, n_layers - 1):
         m = verify_reconstruction(probe, all_ids[:1], li)
         gate["layer_{}".format(li)] = m
-        print("    layer {:<3d} max relative error {:.3e}  PASS".format(
-            li, m["max_rel_error"]))
+        print("    layer {:<3d} relative Frobenius error {:.3e}  PASS".format(
+            li, m["rel_frobenius_error"]))
 
     half = all_ids.shape[0] // 2
     a_ids, b_ids = all_ids[:half], all_ids[half:half * 2]
@@ -203,6 +203,8 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
         "ceiling": ceiling, "verdict": res.verdict,
         "resolvable": bool(res.passed), "action": res.action,
         "baseline_loss_half_a": base_a, "baseline_loss_half_b": base_b,
+        "gate_max_rel_frobenius": max(m["rel_frobenius_error"]
+                                      for m in gate.values()),
         "gate_max_rel_error": max(m["max_rel_error"] for m in gate.values()),
         "status": "completed",
     }

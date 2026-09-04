@@ -149,8 +149,24 @@ def xsa_intervention(probe, layer_idx: int,
         yield h
 
 
+#: Relative Frobenius error above which the reconstruction is treated as
+#: structurally wrong. Chosen from measurement, not from taste. On
+#: Pythia-160m the correct layout gives 2.0e-4, while deliberately breaking
+#: it gives 1.50 (heads reversed), 1.48 (heads rolled by one) and 1.39
+#: (missing transpose). Any real layout error is four orders of magnitude
+#: above the numerical floor, so anything in [1e-3, 1] separates them; 1e-2
+#: sits in the middle of that range.
+#:
+#: The residual 2e-4 is not accumulation: it does not fall in float64 and
+#: does not grow with sequence length. It is a benign difference between the
+#: model's own attention path and an eager A @ V recomputation. Tightening
+#: the threshold below it would reject correct layouts, which is how a gate
+#: stops being run.
+RECONSTRUCTION_TOL = 1e-2
+
+
 def verify_reconstruction(probe, ids: torch.Tensor, layer_idx: int,
-                          tol: float = 1e-4) -> Dict[str, float]:
+                          tol: float = RECONSTRUCTION_TOL) -> Dict[str, float]:
     """Rebuild ``y = A @ expand_kv(V)`` and compare against the real tensor.
 
     This is a gate, not a diagnostic. If the reconstruction does not match
@@ -207,20 +223,26 @@ def verify_reconstruction(probe, ids: torch.Tensor, layer_idx: int,
     rebuilt = rebuilt.transpose(1, 2).reshape(b, t, nq * d)
     real = captured["y"].float()
 
+    diff = rebuilt - real
     denom = real.abs().max().item() or 1.0
-    max_abs = (rebuilt - real).abs().max().item()
+    fro = real.norm().item() or 1.0
+    max_abs = diff.abs().max().item()
     metrics = {"max_abs_error": max_abs,
                "max_rel_error": max_abs / denom,
-               "mean_abs_error": (rebuilt - real).abs().mean().item(),
+               # The gated quantity. A max-norm ratio is dominated by whichever
+               # single coordinate happens to be largest; the Frobenius ratio
+               # asks whether the whole tensor was rebuilt.
+               "rel_frobenius_error": diff.norm().item() / fro,
+               "mean_abs_error": diff.abs().mean().item(),
                "reference_scale": denom,
                "layer": float(layer_idx)}
-    if metrics["max_rel_error"] > tol:
+    if metrics["rel_frobenius_error"] > tol:
         raise ReconstructionError(
             "A @ expand_kv(V) does not reproduce the attention output at "
-            "layer {}: max relative error {:.3e} exceeds {:.0e}. The head "
-            "layout, the KV expansion or the projection point is wrong; no "
-            "per-head number from this model can be trusted.".format(
-                layer_idx, metrics["max_rel_error"], tol))
+            "layer {}: relative Frobenius error {:.3e} exceeds {:.0e}. The "
+            "head layout, the KV expansion or the projection point is wrong; "
+            "no per-head number from this model can be trusted.".format(
+                layer_idx, metrics["rel_frobenius_error"], tol))
     return metrics
 
 

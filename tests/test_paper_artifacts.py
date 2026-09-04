@@ -6,7 +6,6 @@ its source file, and a palette that is unreadable in greyscale fails the build
 instead of shipping.
 """
 
-import runpy
 import subprocess
 import sys
 from pathlib import Path

@@ -33,7 +33,7 @@ jobs:
           pip install "numpy<2.0" scipy matplotlib pandas tqdm pytest transformers pyflakes pillow
 
       - name: Lint
-        run: python -m pyflakes xsac scripts tests data/prepare.py
+        run: python -m pyflakes xsac scripts tests examples data/prepare.py
 
       - name: Self-tests (the Day-1 gate; all ten must pass)
         run: python scripts/selftest_arms.py --json results/selftest.json
