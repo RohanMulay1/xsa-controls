@@ -218,17 +218,25 @@ def table5_a2():
     if rows is None:
         return ("a2_correlations.csv missing -- run the A2a/A2 reliability "
                 "experiment first")
-    body = [[r.get("statistic"), fnum(r.get("rho_raw"), 3),
-             fnum(r.get("r_delta"), 3), fnum(r.get("r_stat"), 3),
-             fnum(r.get("rho_disattenuated"), 3), r.get("n")] for r in rows]
+    body = [[r.get("model", "").split("/")[-1], r.get("statistic"),
+             fnum(r.get("rho_raw"), 3), fnum(r.get("r_delta"), 3),
+             fnum(r.get("r_stat"), 3), fnum(r.get("rho_disattenuated"), 3),
+             r.get("verdict", ""), r.get("n")] for r in rows]
+    models = sorted({r.get("model", "") for r in rows})
     emit("T5",
-         "Per-head motivating statistic against measured intervention effect. "
-         "The disattenuated column divides by sqrt(r_delta * r_stat), the "
-         "ceiling that split-half unreliability places on any observable "
-         "correlation. n = {} rows.".format(len(rows)),
-         ["statistic", "raw $\\rho$", "$r_\\Delta$", "$r_{stat}$",
-          "disattenuated $\\rho$", "n"],
-         body)
+         "Per-head motivating statistic against the measured effect of "
+         "removing that head's self-value. The disattenuated column divides "
+         "by sqrt(r_delta * r_stat), the ceiling split-half unreliability "
+         "places on any observable correlation. The raw self-value cosine "
+         "carries essentially no information about the effect in either "
+         "Pythia model while the null-corrected excess does; in GPT-2 the "
+         "ordering reverses, so we report the disagreement rather than the "
+         "average. n = {} models, 144 to 384 heads per row.".format(
+             len(models)),
+         ["model", "statistic", "raw $\\rho$", "$r_\\Delta$",
+          "$r_{stat}$", "disattenuated $\\rho$", "verdict", "heads"],
+         body,
+         aligns=["l", "l", "r", "r", "r", "r", "l", "r"])
     return None
 
 

@@ -109,7 +109,8 @@ the softmax row becomes all `-inf` and produces NaN.
 Eleven models and 6,080 head-level rows in total, 32 wikitext-103 documents
 each, eager attention, null partner drawn within the sequence from positions
 the query could causally attend. Table 1 reports the nine multi-head models
-(5,408 heads); the two grouped-query models (672 heads) are in Table 2,
+(5,408 heads); the two grouped-query models (672 heads) plus TinyLlama-1.1B
+are in Table 2,
 because the within/across-group split does not exist for multi-head attention.
 
 **Table 1.** Check 1 across the multi-head ladder. `n = 9 MHA models, 5,408 heads.`
@@ -164,22 +165,90 @@ Under GQA several query heads share one KV head, so "the token's own value
 vector" is shared across a group. No prior work we are aware of checks what
 this does to the statistic; XSA's Table 1 reports no KV-head count.
 
-**Table 2.** Within-group versus across-group excess. `n = 2 models, 672 heads.`
+**Table 2.** Within-group versus across-group excess. `n = 3 models across 2
+architecture families, 1,376 heads.`
 
 | model | query / KV heads | within-group excess | across-group excess |
 |---|---|---|---|
 | Qwen2.5-0.5B | 14 / 2 | **+0.2415** | **-0.1876** |
 | Qwen2.5-1.5B | 12 / 2 | **+0.2731** | **-0.1922** |
+| TinyLlama-1.1B | 32 / 4 | **+0.2373** | **-0.1126** |
 
 Borrowing a neighbouring group's value at the same position does not merely
 lose the effect; it goes **negative**. The self-value direction is specific to
 the shared KV group. GQA models also show a higher self-specific fraction, 56
-to 59%, than any MHA model on the ladder, 37 to 52%. GQA is not a neutral
+to 68%, than any MHA model on the ladder, 37 to 52%. GQA is not a neutral
 change of variable for this family of methods. (Figure 5.)
+
+The sign replicates outside the Qwen family. TinyLlama-1.1B is a Llama
+architecture with a different group ratio (32 query heads over 4 KV heads
+against Qwen's 14 or 12 over 2), and its across-group excess is negative at
+-0.1126. The magnitude is about 40% smaller than Qwen's, so we claim the sign
+and not the size: what generalises is that the statistic is specific to the
+head's own KV group, not how far borrowing across groups pushes it.
+
+TinyLlama was measured under transformers 5.16.1 while the rest of the ladder
+used 4.x. Both Qwen models were re-measured in the new environment to bound
+what that costs: the largest disagreement across the four statistics is
+4.0e-4, so the comparison is not threatened by the mixed provenance.
 
 ---
 
-## 5. The matched intervention (Check 2), and a power failure
+## 5. Does the statistic predict the intervention? (A2a, A2)
+
+Checks 1 and 2 ask whether a statistic is confounded and whether an
+intervention is specific. This section asks the question that sits between
+them: does the statistic a method is motivated by actually predict what the
+method's intervention does?
+
+Answering it requires knowing first whether the intervention's effect can be
+measured at all. We remove each head's self-value component in a frozen model,
+one head at a time, and measure the change in next-token loss twice, on
+disjoint halves of the evaluation documents. The agreement between the halves
+is `r_delta`; the same split-half agreement for the statistic is `r_stat`.
+Their geometric mean bounds any correlation between the two.
+
+Nothing in this section is reported until `A @ expand_kv(V)` reproduces the
+tensor the model feeds to its output projection. Deliberately breaking the
+head layout moves that error from 2.0e-4 to 1.4-1.5, four orders of
+magnitude, so the gate distinguishes a correct implementation from a plausible
+wrong one rather than merely reporting a small number.
+
+**Table 5.** Per-head statistic against measured per-head effect.
+`n = 3 models, 144 to 384 heads each.`
+
+| model | statistic | raw rho | r_delta | ceiling | disattenuated |
+|---|---|---|---|---|---|
+| gpt2 | cos_self | +0.450 | +0.752 | 0.864 | **+0.521** |
+| gpt2 | excess | +0.190 | +0.752 | 0.864 | +0.220 |
+| pythia-160m | cos_self | **+0.001** | +0.304 | 0.548 | +0.002 |
+| pythia-160m | excess | +0.396 | +0.304 | 0.548 | **+0.723** |
+| pythia-410m | cos_self | **+0.039** | +0.446 | 0.659 | +0.059 |
+| pythia-410m | excess | +0.393 | +0.446 | 0.659 | **+0.596** |
+
+The effect is resolvable, which is the first thing worth saying: `r_delta` is
++0.752 in GPT-2 (reliable) and +0.304 and +0.446 in the two Pythia models
+(attenuated). Rank agreement rises monotonically with evaluation budget, from
+about 0.47 at two documents per half to 0.86 at sixteen, so the attenuation is
+a sample-size limit rather than a property of the effect.
+
+In both Pythia models the raw self-value cosine -- the quantity the method is
+motivated by -- carries essentially no information about the measured effect
+of removing it: rho = +0.001 and +0.039. The null-corrected excess predicts it
+substantially, +0.396 and +0.393 raw, +0.723 and +0.596 after correcting for
+the ceiling. That is the case for Check 1 stated as a prediction rather than
+as a critique: correcting for the matched null does not merely lower a number,
+it recovers a statistic that tracks the intervention.
+
+**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.450) and the
+excess does not (+0.190). We report this rather than averaging over it. Two
+models agreeing and a third disagreeing is not a general law about statistics,
+and the honest summary is narrower than the one we would have liked to write:
+whether the raw statistic predicts its own intervention is model-dependent,
+and a method that assumes it does is assuming something that is false in two
+of the three models we measured.
+
+## 6. The matched intervention (Check 2), and a power failure
 
 Five arms, identical initialisation and data order per seed, differing only in
 the intervention. Zero-initialised gates make every arm exactly the baseline at
@@ -208,7 +277,7 @@ null it cannot support.
 
 ---
 
-## 6. Check 0 in the field
+## 7. Check 0 in the field
 
 The resolvability check was applied to a separate, independently developed
 intervention study on a partitioned-attention architecture, which reported that
@@ -228,7 +297,7 @@ review.
 
 ---
 
-## 7. A reproduction we could not complete
+## 8. A reproduction we could not complete
 
 Published reference values for GPT-2 are `cos_self` 0.5406, `cos_null` 0.3798,
 `excess` 0.1608. We measure **0.4828 / 0.2987 / 0.1840**, outside a ±0.01
@@ -250,7 +319,7 @@ the practice this paper argues against.
 
 ---
 
-## 8. Limitations
+## 9. Limitations
 
 * **The scale gap is real and we do not paper over it.** We *train* at 51M
   parameters. XSA trains at 0.7-2.7B. We *measure* frozen statistics to 6.9B,
@@ -275,7 +344,7 @@ the practice this paper argues against.
 
 ---
 
-## 9. What ships
+## 10. What ships
 
 `xsac/checks.py`: `check_resolvability`, `check_null`, `check_matched`. Three
 functions, documented for someone who has not read this paper, each returning a

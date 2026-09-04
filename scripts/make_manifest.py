@@ -158,6 +158,37 @@ def ladder_total_heads():
     return f
 
 
+
+def a2_field(model, statistic, field):
+    def f():
+        data = rows("a2_correlations.csv")
+        if data is None:
+            return None
+        for r in data:
+            if r["model"] == model and r["statistic"] == statistic:
+                try:
+                    return float(r[field])
+                except (TypeError, ValueError):
+                    return None
+        return None
+    return f
+
+
+def reliability_field(model, field):
+    def f():
+        data = rows("reliability.csv")
+        if data is None:
+            return None
+        for r in data:
+            if r["model"] == model and r.get("status") == "completed":
+                try:
+                    return float(r[field])
+                except (TypeError, ValueError):
+                    return None
+        return None
+    return f
+
+
 #: claim text, expected value, unit, artifact, producing script, recompute fn
 CLAIMS = [
     ("58% of cos(y_i, v_i) at Pythia-6.9B is explained by the matched null",
@@ -219,6 +250,26 @@ CLAIMS = [
     ("diagmask slowdown at CFG_M, measured not predicted",
      2.3364, "x", "calibration.json", "calibrate_cli.py",
      diagmask_slowdown("M")),
+    ("the per-head XSA effect is resolvable in GPT-2 (split-half r_delta)",
+     0.752, "", "reliability.csv", "run_reliability.py",
+     reliability_field("gpt2", "r_delta")),
+    ("in Pythia-160m the raw self-value cosine carries essentially no "
+     "information about the measured per-head effect",
+     0.001, "", "a2_correlations.csv", "run_reliability.py",
+     a2_field("EleutherAI/pythia-160m", "cos_self", "rho_raw")),
+    ("in Pythia-160m the null-corrected excess does predict it",
+     0.396, "", "a2_correlations.csv", "run_reliability.py",
+     a2_field("EleutherAI/pythia-160m", "excess", "rho_raw")),
+    ("in Pythia-410m the raw self-value cosine again carries almost nothing",
+     0.039, "", "a2_correlations.csv", "run_reliability.py",
+     a2_field("EleutherAI/pythia-410m", "cos_self", "rho_raw")),
+    ("in Pythia-410m the null-corrected excess again predicts",
+     0.393, "", "a2_correlations.csv", "run_reliability.py",
+     a2_field("EleutherAI/pythia-410m", "excess", "rho_raw")),
+    ("in GPT-2 the ordering reverses: the raw cosine predicts better than "
+     "the excess, which is reported rather than averaged away",
+     0.450, "", "a2_correlations.csv", "run_reliability.py",
+     a2_field("gpt2", "cos_self", "rho_raw")),
 ]
 
 
