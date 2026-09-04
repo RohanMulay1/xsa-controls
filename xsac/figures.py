@@ -30,12 +30,16 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 #: Colour-vision-safe categorical slots. Never red/green as the only contrast.
+#: Chosen for relative luminance, not only for hue. The previous palette put
+#: baseline (#4d4d4d) and diagmask (#4a3aa7) 0.001 apart in luminance: two
+#: identical lines in greyscale or print, which spec section 11 forbids. Every
+#: pair here is at least 0.125 apart, and scripts/check_figures.py enforces it.
 SERIES = {
-    "baseline": "#4d4d4d",
-    "xsa": "#2a78d6",
-    "random": "#eb6834",
-    "meanval": "#1baf7a",
-    "diagmask": "#4a3aa7",
+    "baseline": "#3c3c3c",
+    "xsa": "#4473b9",
+    "random": "#f59b6e",
+    "meanval": "#3cea38",
+    "diagmask": "#d266f8",
 }
 #: Redundant encoding: marker and linestyle carry identity too.
 MARKERS = {"baseline": "o", "xsa": "s", "random": "D",
