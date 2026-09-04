@@ -46,8 +46,43 @@ RESULTS = ROOT / "results"
 DATA = ROOT / "data"
 
 
+def _enforce_token_floor(tokens: float, source: str, size: str,
+                         accept_underpowered: bool) -> None:
+    """Refuse a budget below the pre-registered floor.
+
+    The published factorial ran at 5e7 tokens because an explicit
+    ``--tokens-per-run`` bypassed calibration entirely, putting it far outside
+    the pre-registered [3.5e8, 6e8] band and voiding the result. The floor is
+    therefore checked on every path that can set a budget, not only on the
+    calibrated one, and going below it requires saying so on the command line.
+    """
+    # Compare against the floor rounded down to batch alignment, not the raw
+    # figure. calibrate.py clamps to tokens_min and then rounds down to a
+    # multiple of batch_tokens, so a budget solved exactly at the floor lands
+    # 37,760 tokens (0.011%) below it. Testing the raw value would refuse the
+    # one budget the solver is meant to produce.
+    floor = int(TRAIN.tokens_min) // TRAIN.batch_tokens * TRAIN.batch_tokens
+    if tokens >= floor:
+        return
+    message = (
+        "REFUSING TO START: {} gives tokens_per_run={:.3g}, below the "
+        "pre-registered floor of {:d} for CFG_{}. A run at this budget is "
+        "outside the registered band and cannot be reported as the primary "
+        "endpoint. Re-run calibration with the real --cost-ceiling, or pass "
+        "--i-accept-underpowered to record it explicitly as an underpowered "
+        "pilot.".format(source, tokens, floor, size))
+    if not accept_underpowered:
+        print(message, file=sys.stderr)
+        raise ValueError(message)
+    print("  WARNING: {:.3g} tokens/run is below the {:d} floor; proceeding "
+          "only because --i-accept-underpowered was passed. This run is an "
+          "underpowered pilot, not the primary endpoint.".format(
+              tokens, floor), file=sys.stderr)
+
+
 def calibrated_train_config(results_dir: Path, size: str,
-                            override: Optional[float] = None) -> TrainConfig:
+                            override: Optional[float] = None,
+                            accept_underpowered: bool = False) -> TrainConfig:
     """Use the budget calibration actually solved for, not the default.
 
     calibrate.py exists to size ``tokens_per_run`` against measured throughput
@@ -66,6 +101,8 @@ def calibrated_train_config(results_dir: Path, size: str,
                 "--tokens-per-run must be a multiple of batch_tokens={} "
                 "so every arm sees an identical budget".format(
                     TRAIN.batch_tokens))
+        _enforce_token_floor(tokens, "--tokens-per-run", size,
+                             accept_underpowered)
         return replace(TRAIN, tokens_per_run=tokens)
     path = Path(results_dir) / "calibration.json"
     if not path.exists():
@@ -89,6 +126,8 @@ def calibrated_train_config(results_dir: Path, size: str,
             "calibration projects spend above the stop-and-report threshold")
     if float(tokens) % TRAIN.batch_tokens:
         raise ValueError("calibrated tokens_per_run is not batch aligned")
+    _enforce_token_floor(float(tokens), "calibration.json", size,
+                         accept_underpowered)
     print("  using calibrated budget: {:.3g} tokens/run "
           "(affordable={}, cuts={})".format(
               tokens, budget.get("affordable"), budget.get("cuts_applied")))
@@ -258,6 +297,11 @@ def main(argv=None) -> int:
     ap.add_argument("--device", default=None)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--n-seeds-planned", type=int, default=8)
+    ap.add_argument("--i-accept-underpowered", action="store_true",
+                    help="proceed with a budget below the pre-registered "
+                         "3.5e8 floor. The run is recorded as an "
+                         "underpowered pilot and must not be "
+                         "reported as the primary endpoint.")
     ap.add_argument("--tokens-per-run", type=float, default=None,
                     help="override the calibrated budget; recorded on every "
                          "run so the number is traceable")
@@ -274,7 +318,8 @@ def main(argv=None) -> int:
     # Every reportable path still fails closed through the budget loader.
     train_cfg = (TRAIN if args.smoke else
                  calibrated_train_config(RESULTS, args.size,
-                                         args.tokens_per_run))
+                                         args.tokens_per_run,
+                                         args.i_accept_underpowered))
     if args.smoke:
         cfg0 = cell_config("baseline", 0, args.size, True, train_cfg)
         ensure_smoke_data(DATA, cfg0.model.vocab_size)

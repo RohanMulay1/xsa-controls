@@ -332,3 +332,52 @@ class TestBudgetHomogeneityGuard:
         r.metrics = {}
         keep, dropped = drop_inconsistent_budgets([r, self._Rec(50_000_000)])
         assert len(keep) + len(dropped) == 2
+
+
+class TestTokenFloorGuard:
+    """The 5e7 factorial was void because an explicit --tokens-per-run
+    bypassed calibration. The floor must hold on every path that sets a
+    budget, and going below it must be an explicit, recorded choice."""
+
+    def test_explicit_override_below_floor_is_refused(self, tmp_path):
+        from scripts.run_factorial import calibrated_train_config
+        # 5e7 batch-aligned: the budget that voided the published factorial.
+        with pytest.raises(ValueError, match="REFUSING TO START"):
+            calibrated_train_config(tmp_path, "S", 49_938_432)
+
+    def test_calibrated_budget_below_floor_is_refused(self, tmp_path):
+        from scripts.run_factorial import calibrated_train_config
+        payload = {"sizes": {"S": {"budget": {
+            "tokens_per_run": 49_938_432, "affordable": True,
+            "over_stop_threshold": False}}}}
+        (tmp_path / "calibration.json").write_text(
+            json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="REFUSING TO START"):
+            calibrated_train_config(tmp_path, "S")
+
+    def test_underpowered_flag_permits_it_and_warns(self, tmp_path, capsys):
+        from scripts.run_factorial import calibrated_train_config
+        cfg = calibrated_train_config(tmp_path, "S", 49_938_432,
+                                      accept_underpowered=True)
+        assert cfg.tokens_per_run == 49_938_432
+        assert "underpowered pilot" in capsys.readouterr().err
+
+    def test_budget_at_the_aligned_floor_is_accepted(self, tmp_path):
+        """calibrate clamps to tokens_min then rounds down to batch
+        alignment, landing just under the raw figure. That budget is the
+        solver's intended output and must not be refused."""
+        from xsac.config import TRAIN
+        from scripts.run_factorial import calibrated_train_config
+        floor = int(TRAIN.tokens_min) // TRAIN.batch_tokens * TRAIN.batch_tokens
+        assert floor < TRAIN.tokens_min
+        cfg = calibrated_train_config(tmp_path, "S", float(floor))
+        assert cfg.tokens_per_run == floor
+
+
+class TestCalibrateCliRequiresCeiling:
+    def test_cost_ceiling_has_no_default(self):
+        """A silent $56 default is what let --cost-ceiling 3.00 look like a
+        considered figure. The argument must be supplied every time."""
+        from scripts.calibrate_cli import main
+        with pytest.raises(SystemExit):
+            main(["--smoke", "--device", "cpu"])
