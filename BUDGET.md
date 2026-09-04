@@ -8,10 +8,38 @@ Ceiling **$70.00**. Stop and report if projected spend exceeds **$66.00**.
 |---|---|---|---|---|
 | 2026-09-03 | Day 1: scaffold, 5 arms, 10/10 self-tests, A4 recompute, Track A on CPU | 0.00 | $0.00 | $70.00 |
 | 2026-09-03 | Calibration, data prep, A1 nine-model ladder, A3 GQA, pilot, CFG_S factorial (12 of 24 cells) | ~7.5 | **~$5.55** | **~$64.45** |
+| 2026-09-04 | A3 second GQA family (TinyLlama), A2a + A2 on GPT-2 and two Pythia sizes, precision check | ~2.6 | **~$3.60** | **~$60.85** |
 
-**Total spent to date: approximately $5.55** on an RTX 6000 Ada at $0.74/hr
-community. Projected spend never approached the $66 stop-and-report threshold,
-which is now enforced in `solve_token_budget` rather than merely declared.
+**Total spent to date: approximately $9.15.** The first block ran on an RTX
+6000 Ada at $0.74/hr community; the second on an A100-SXM4-80GB at $1.39/hr,
+shared with the sibling CRPA project's long-context work. Projected spend
+never approached the $66 stop-and-report threshold, which is now enforced in
+`solve_token_budget` rather than merely declared.
+
+## The primary endpoint is still not registered, and not run
+
+The spec's primary endpoint is the CFG_M factorial at a budget inside
+[3.5e8, 6e8] tokens per run. **It has not been run and is not re-registered
+here.** Registering a pre-registered endpoint that no one intends to run
+before the paper is written would be worse than leaving it open.
+
+What exists instead is `factorial_s.csv`: 24 cells at 5e7 tokens per run,
+outside the band, produced when `calibrate_cli.py` was invoked with
+`--cost-ceiling 3.00` against a spec figure of $56. The solver recorded
+`affordable: false` and the run proceeded anyway. It is kept, relabelled as
+the underpowered pilot, because it is honest provenance and it is what the
+power analysis is computed from. It is not the primary endpoint and no table
+presents it as one.
+
+Running it properly costs about $38 at 24 runs x 2.13 h x $0.74/hr, roughly
+51 GPU-hours unattended, and about $60.85 of the ceiling remains. The
+blocker is elapsed time, not money.
+
+Two guards now make the original failure impossible to repeat:
+`--cost-ceiling` is required with no default, and `run_factorial.py` refuses
+to start below the batch-aligned 3.5e8 floor on **every** path that can set a
+budget, including an explicit `--tokens-per-run`, unless
+`--i-accept-underpowered` records the choice.
 
 ## Planned allocation (spec section 12, at the $0.86/hr L40S placeholder)
 
