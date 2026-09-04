@@ -31,6 +31,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from xsac.runmeta import numeric_records, read_records  # noqa: E402
+from xsac.config import TRAIN  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
@@ -65,8 +66,9 @@ def _factorial_rows(size: str) -> Tuple[List[dict], str]:
     raw_dir = RESULTS / "factorial_{}".format(size)
     records = numeric_records(read_records(raw_dir))
     if records:
-        return [dict(status=r.status, arm=r.arm, seed=r.seed, size=r.size,
-                     **(r.metrics or {})) for r in records], raw_dir.name
+        return [{**(r.metrics or {}), "status": r.status, "arm": r.arm,
+                 "seed": r.seed, "size": r.size}
+                for r in records], raw_dir.name
 
     aggregate = RESULTS / "factorial_{}.csv".format(size)
     if not aggregate.exists():
@@ -266,6 +268,13 @@ def day46() -> List[Check]:
                        "tokens_seen={}".format(next(iter(budgets)))
                        if len(budgets) == 1 else
                        "MIXED budgets: {}".format(sorted(budgets))))
+        floor_aligned = (int(TRAIN.tokens_min) // TRAIN.batch_tokens
+                         * TRAIN.batch_tokens)
+        at_floor = len(budgets) == 1 and next(iter(budgets)) >= floor_aligned
+        checks.append((at_floor,
+                       "token budget meets the preregistered floor ({})".format(size),
+                       "minimum {}, observed {}".format(
+                           floor_aligned, sorted(budgets))))
         expected_arms = {"baseline", "xsa", "random"}
         expected_seeds = 8 if size == "s" else 3
         complete = (arms == expected_arms and len(by_seed) == expected_seeds
