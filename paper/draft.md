@@ -24,10 +24,11 @@ statistic behaves structurally differently: self-value similarity is specific
 to a head's own KV group, and borrowing a neighbouring group's value goes
 negative (Table 2, Figure 5). **(3)** Applied to two other methods, the same
 null leaves 99.2% and 71.7% of their statistics intact (Table 3, Figure 4), so
-the checklist discriminates rather than debunking uniformly. **(4)** Applied to
-a separate published intervention study, our resolvability check found the
-effect unmeasurable and caused that project's headline claim to be withdrawn
-(§6).
+the checklist discriminates rather than debunking uniformly. **(4)** Applied to our own
+earlier, unpublished reproduction of a partitioned-attention method, the
+resolvability check found the single-edge effect unmeasurable in float32 and
+we withdrew that project's headline claim (§6). We report this as our own
+prior work, not as an independent replication of a third party.
 
 We do not claim to refute XSA. Our training leg runs at 51M parameters against
 XSA's 0.7-2.7B, and at the token budget we could afford the design is
@@ -105,11 +106,13 @@ the softmax row becomes all `-inf` and produces NaN.
 
 ## 3. Check 1 across scale (A1)
 
-Nine models, 5,408 head-level rows, 32 wikitext-103 documents each, eager
-attention, null partner drawn within the sequence from positions the query
-could causally attend.
+Eleven models and 6,080 head-level rows in total, 32 wikitext-103 documents
+each, eager attention, null partner drawn within the sequence from positions
+the query could causally attend. Table 1 reports the nine multi-head models
+(5,408 heads); the two grouped-query models (672 heads) are in Table 2,
+because the within/across-group split does not exist for multi-head attention.
 
-**Table 1.** Check 1 across the ladder. `n = 9 models, 5,408 heads.`
+**Table 1.** Check 1 across the multi-head ladder. `n = 9 MHA models, 5,408 heads.`
 
 | model | params | cos_self | cos_null | excess | % self-specific |
 |---|---|---|---|---|---|
@@ -125,10 +128,14 @@ could causally attend.
 
 ### 3.1 The scale objection, answered
 
-`cos_null` falls from 0.2637 at 160M to 0.1979 at 6.9B. The confound weakens
-with scale, consistent with Machina & Mercer. **It does not vanish.** At 6.9B,
-58% of `cos(y_i, v_i)` is still explained by the null, and across XSA's own
-0.7-2.7B training range the self-specific share sits between 46 and 51%. The
+Raw `cos_null` falls from 0.2637 at 160M to 0.1979 at 6.9B, but so does
+`cos_self` (0.4180 to 0.3404), and the share of the statistic the null
+explains is **not** monotone in scale. Within Pythia it runs 63.1%, 48.1%,
+49.2%, 52.2%, 58.1% from 160M to 6.9B: it falls to a minimum at 410M and then
+rises again. We therefore make no claim about a scale trend in either
+direction. What the ladder supports is a level statement: at 6.9B, 58% of
+`cos(y_i, v_i)` is still explained by the null, and across XSA's own 0.7-2.7B
+training range the self-specific share sits between 46 and 51%. The
 isotropy result does not remove the confound at the scale the method was
 trained at. (Figure 3, which shades XSA's tested range.)
 

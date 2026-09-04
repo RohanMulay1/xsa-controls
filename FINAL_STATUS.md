@@ -13,11 +13,12 @@
 |---|---|---|
 | Completion | 4/10 | **8.5/10** |
 | Quality | 8/10 | **9.5/10** |
-| Tests | 139 | **202** |
+| Tests | 139 | **214** |
 | Coverage | 74% | **90%** |
 | `calibrate.py` coverage | **0%** | **96%** |
 | Experiments executed | 3, all CPU | A1 ladder to 6.9B, A3 GQA, A6, calibration, pilot, **24-cell CFG_S factorial**, GPT-2 diagnosis |
 | Figures from real data | 0 of 5 | **5 of 5, none skipped** |
+| Paper artifacts (tables, manifest, repro, example) | 0 | **T1-T4 + T6, self-verifying manifest, REPRODUCE.md, worked example** |
 | Day gates passing | 1 | **1, 2, 3, 8, 9, 10** |
 
 Not 10/10. Days 4-6 sit at 4/5 and Day 7 at 3/4; both reasons are given below
@@ -47,10 +48,12 @@ gated rank-one removal plausibly just costs capacity there. The measured MDE
 replication reports (0.00076), so this design still cannot resolve the claimed
 effect in either direction.
 
-**2. The scale objection, answered with measurement.** Nine models, 5,408 head
-rows. `cos_null` falls from 0.2637 at 160M to 0.1979 at Pythia-6.9B, so the
-anisotropy confound weakens with scale but **58% of `cos(y_i, v_i)` is still
-the null at 6.9B**, and roughly half across XSA's own 0.7-2.7B training range.
+**2. The scale objection, answered with measurement.** Eleven models, 6,080
+head rows (nine MHA, 5,408 heads; two GQA, 672). **58% of `cos(y_i, v_i)` is
+still the null at Pythia-6.9B**, and roughly half across XSA's own 0.7-2.7B
+training range. We make no claim about a scale *trend*: the share the null
+explains is non-monotone within Pythia (63.1%, 48.1%, 49.2%, 52.2%, 58.1%
+from 160M to 6.9B), falling to a minimum at 410M and rising thereafter.
 
 **3. GQA behaves structurally differently, and nobody had checked.**
 Within-group excess +0.2415 and +0.2731; across-group excess **negative**,
@@ -163,7 +166,7 @@ python scripts/run_factorial.py --size S --arms baseline xsa random \
   --seeds 42 1337 2024 7 99 512 8191 31337 --tokens-per-run 5e7 --device cuda
 python scripts/make_figures.py
 
-pytest                    # 202 tests
+pytest                    # 214 tests
 ```
 
 ---
@@ -189,7 +192,7 @@ pytest                    # 202 tests
 ## Verification
 
 * **Working tree:** clean
-* **Tests:** 202 passing, 90% coverage
+* **Tests:** 214 passing, 90% coverage
 * **Lint:** pyflakes clean, enforced in CI
 * **CI:** green
 * **Compute:** the RunPod pods used for this work have been **terminated**. No
