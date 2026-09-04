@@ -80,12 +80,15 @@ def measure_throughput(cfg: ModelConfig, arm: str, steps: int = 50,
     if dev.type == "cuda":
         torch.cuda.synchronize()
 
-    started = time.time()
+    # perf_counter is monotonic and has sufficient resolution for the tiny
+    # CI calibration profile.  time.time() can report a zero-length interval
+    # on Windows, which turns a successful measurement into 0 tok/s.
+    started = time.perf_counter()
     for _ in range(steps):
         one_step()
     if dev.type == "cuda":
         torch.cuda.synchronize()
-    elapsed = time.time() - started
+    elapsed = time.perf_counter() - started
 
     tokens = steps * micro_batch * cfg.block_size
     tps = tokens / elapsed if elapsed > 0 else 0.0

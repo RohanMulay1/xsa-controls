@@ -1,0 +1,10 @@
+model,parameters,source
+gpt2,124000000,Hugging Face model configuration
+EleutherAI/pythia-160m,160000000,Hugging Face model configuration
+gpt2-medium,355000000,Hugging Face model configuration
+EleutherAI/pythia-410m,410000000,Hugging Face model configuration
+gpt2-large,774000000,Hugging Face model configuration
+EleutherAI/pythia-1.4b,1400000000,Hugging Face model configuration
+gpt2-xl,1500000000,Hugging Face model configuration
+EleutherAI/pythia-2.8b,2800000000,Hugging Face model configuration
+EleutherAI/pythia-6.9b,6900000000,Hugging Face model configuration

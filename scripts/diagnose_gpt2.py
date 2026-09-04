@@ -8,9 +8,10 @@ Measured here: 0.4828 / 0.2987 / 0.1840 at block 512.
 
 **This script does not tune toward the reference.** It enumerates the design
 choices a Check-1 measurement has to make, states what each one is here,
-measures the alternative, and reports every result. If one alternative lands on
-the reference that is evidence about which convention the reference used; if
-none does, the discrepancy stays unexplained and is reported as unexplained.
+measures the alternative, and reports every result. A numerical match is only
+a candidate explanation: without independent methodological evidence it does
+not identify the convention the reference used. The discrepancy therefore
+stays unexplained unless that independent evidence is supplied.
 
 The distinction matters because the obvious failure mode is to sweep free
 parameters until a target appears and then present the winning setting as the
@@ -197,9 +198,10 @@ def main(argv=None) -> int:
               "+/-{}:".format(len(hits), len(rows), TOL))
         for h in hits:
             print("   {} at T={}".format(h["variant"], h["block"]))
-        print("\nThat identifies which convention the reference used. It does "
-              "NOT mean the shipped convention is wrong: the shipped choice is "
-              "argued for on its own terms in xsac/frozen.py.")
+        print("\nThese are candidate numerical matches only. Without an "
+              "independent reason that a configuration is the published "
+              "method, the discrepancy remains unexplained and no row is "
+              "selected.")
     else:
         print("NONE of the {} configurations reproduce the reference within "
               "+/-{}.".format(len(rows), TOL))
@@ -212,8 +214,11 @@ def main(argv=None) -> int:
     write_csv(rows, ROOT / "results" / "gpt2_diagnosis.csv")
     (ROOT / "results" / "gpt2_diagnosis.json").write_text(
         json.dumps({"reference": REFERENCE, "tolerance": TOL, "rows": rows,
-                    "n_reproducing": len(hits),
-                    "explained": bool(hits)}, indent=2, default=str),
+                    "n_candidate_matches": len(hits),
+                    "explained": False,
+                    "selection": None,
+                    "explanation_status": "requires independent provenance"},
+                   indent=2, default=str),
         encoding="utf-8")
     print("wrote results/gpt2_diagnosis.csv")
     return 0

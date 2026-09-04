@@ -58,18 +58,37 @@ def calibrated_train_config(results_dir: Path, size: str,
     it.
     """
     if override is not None:
-        return replace(TRAIN, tokens_per_run=float(override))
+        tokens = float(override)
+        if tokens <= 0:
+            raise ValueError("--tokens-per-run must be positive")
+        if tokens % TRAIN.batch_tokens:
+            raise ValueError(
+                "--tokens-per-run must be a multiple of batch_tokens={} "
+                "so every arm sees an identical budget".format(
+                    TRAIN.batch_tokens))
+        return replace(TRAIN, tokens_per_run=tokens)
     path = Path(results_dir) / "calibration.json"
     if not path.exists():
-        return TRAIN
+        raise FileNotFoundError(
+            "missing {}; run scripts/calibrate_cli.py with the actual rate, "
+            "or pass an explicit --tokens-per-run".format(path))
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
         budget = payload["sizes"][size]["budget"]
-    except Exception:
-        return TRAIN
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise ValueError("invalid calibration file {}: {}".format(
+            path, exc)) from exc
     tokens = budget.get("tokens_per_run")
-    if not tokens:
-        return TRAIN
+    if not tokens or not budget.get("affordable", False):
+        raise ValueError(
+            "calibration for CFG_{} is not affordable at the registered "
+            "floor; stop or pass an independently cost-checked explicit "
+            "--tokens-per-run".format(size))
+    if budget.get("over_stop_threshold", False):
+        raise ValueError(
+            "calibration projects spend above the stop-and-report threshold")
+    if float(tokens) % TRAIN.batch_tokens:
+        raise ValueError("calibrated tokens_per_run is not batch aligned")
     print("  using calibrated budget: {:.3g} tokens/run "
           "(affordable={}, cuts={})".format(
               tokens, budget.get("affordable"), budget.get("cuts_applied")))

@@ -235,6 +235,36 @@ class TestCalibrateEndToEnd:
             out["sizes"]["TINY"]["budget"]["tokens_per_run"]
 
 
+class TestCalibrationConsumption:
+    def test_missing_calibration_fails_closed(self, tmp_path):
+        from scripts.run_factorial import calibrated_train_config
+        with pytest.raises(FileNotFoundError, match="missing"):
+            calibrated_train_config(tmp_path, "S")
+
+    def test_malformed_calibration_fails_closed(self, tmp_path):
+        from scripts.run_factorial import calibrated_train_config
+        (tmp_path / "calibration.json").write_text("{}", encoding="utf-8")
+        with pytest.raises(ValueError, match="invalid calibration"):
+            calibrated_train_config(tmp_path, "S")
+
+    def test_unaffordable_calibration_fails_closed(self, tmp_path):
+        from scripts.run_factorial import calibrated_train_config
+        payload = {"sizes": {"S": {"budget": {
+            "tokens_per_run": 349_962_240, "affordable": False,
+            "over_stop_threshold": False}}}}
+        (tmp_path / "calibration.json").write_text(
+            json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="not affordable"):
+            calibrated_train_config(tmp_path, "S")
+
+    def test_explicit_budget_must_be_batch_aligned(self, tmp_path):
+        from scripts.run_factorial import calibrated_train_config
+        with pytest.raises(ValueError, match="multiple"):
+            calibrated_train_config(tmp_path, "S", 350_000_000)
+        cfg = calibrated_train_config(tmp_path, "S", 349_962_240)
+        assert cfg.tokens_per_run == 349_962_240
+
+
 class TestBudgetHomogeneityGuard:
     """Averaging across token budgets produces a number describing neither.
 

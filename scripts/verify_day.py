@@ -22,6 +22,7 @@ that rather than papering over it. Both are documented in DEVIATIONS.md:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
@@ -51,6 +52,29 @@ def _json(path: Path) -> Optional[dict]:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+def _factorial_rows(size: str) -> Tuple[List[dict], str]:
+    """Read raw records when present, otherwise the committed aggregate.
+
+    Clean clones intentionally do not contain ignored per-run directories.
+    The gate must therefore be able to verify the committed evidence rather
+    than reporting 0/2 simply because the provenance-preserving aggregate is
+    the only representation available.
+    """
+    raw_dir = RESULTS / "factorial_{}".format(size)
+    records = numeric_records(read_records(raw_dir))
+    if records:
+        return [dict(status=r.status, arm=r.arm, seed=r.seed, size=r.size,
+                     **(r.metrics or {})) for r in records], raw_dir.name
+
+    aggregate = RESULTS / "factorial_{}.csv".format(size)
+    if not aggregate.exists():
+        return [], aggregate.name
+    with aggregate.open(newline="", encoding="utf-8") as fh:
+        rows = [r for r in csv.DictReader(fh)
+                if r.get("status") in ("completed", "smoke")]
+    return rows, aggregate.name
 
 
 # ---------------------------------------------------------------------------
@@ -218,26 +242,41 @@ def day46() -> List[Check]:
     """Factorial complete, pairing provably held."""
     checks: List[Check] = []
     for size in ("s", "m"):
-        d = RESULTS / "factorial_{}".format(size)
-        recs = numeric_records(read_records(d))
-        if not recs:
+        rows, source = _factorial_rows(size)
+        if not rows:
             checks.append((False, "factorial_{} has runs".format(size),
-                           "no numeric records in {}".format(d.name)))
+                           "no completed records in {}".format(source)))
             continue
-        # Same tokens_seen for every arm at a given seed: proof the pairing
-        # held. Different step accounting between arms would otherwise go
-        # unnoticed and silently confound every paired difference.
         by_seed: Dict[int, set] = {}
-        for r in recs:
-            by_seed.setdefault(r.seed, set()).add(
-                r.metrics.get("tokens_seen"))
+        budgets = set()
+        arms = set()
+        for row in rows:
+            seed = int(row["seed"])
+            budget = int(float(row["tokens_seen"]))
+            by_seed.setdefault(seed, set()).add(budget)
+            budgets.add(budget)
+            arms.add(row["arm"])
         bad = {s: v for s, v in by_seed.items() if len(v) > 1}
         checks.append((not bad, "pairing: identical tokens_seen per seed "
                                 "({})".format(size),
                        "all {} seeds consistent".format(len(by_seed)) if not bad
                        else "MISMATCH at seeds {}".format(sorted(bad))))
-        losses = [r.metrics.get("final_val_loss") for r in recs]
-        checks.append((all(v == v for v in losses if v is not None),
+        checks.append((len(budgets) == 1,
+                       "one token budget across the full grid ({})".format(size),
+                       "tokens_seen={}".format(next(iter(budgets)))
+                       if len(budgets) == 1 else
+                       "MIXED budgets: {}".format(sorted(budgets))))
+        expected_arms = {"baseline", "xsa", "random"}
+        expected_seeds = 8 if size == "s" else 3
+        complete = (arms == expected_arms and len(by_seed) == expected_seeds
+                    and len(rows) == len(expected_arms) * expected_seeds)
+        checks.append((complete, "pre-registered grid complete ({})".format(size),
+                       "{} rows, {} seeds, arms {} from {}".format(
+                           len(rows), len(by_seed), sorted(arms), source)))
+        losses = [float(r["final_val_loss"]) for r in rows
+                  if r.get("final_val_loss") not in (None, "")]
+        checks.append((len(losses) == len(rows) and
+                       all(v == v for v in losses),
                        "no NaN in the loss column ({})".format(size),
                        "{} rows".format(len(losses))))
 
