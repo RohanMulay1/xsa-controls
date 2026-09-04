@@ -329,8 +329,27 @@ def day7() -> List[Check]:
         checks.append((False, "GPT-2 reproduces 0.5406/0.3798/0.1608",
                        "MISSING gpt2_target_check.json"))
     else:
+        # The spec's own section 18 records that these reference values are
+        # quoted without a sequence length, that the statistic is strongly
+        # length-dependent, and that cos_self never reaches 0.5406 at any
+        # length tested. It concludes that this gate "should be amended to
+        # require it, because as written [it] asks for a number that is not
+        # well defined without one". That amendment is the length check below.
+        #
+        # The reproduction check itself is deliberately left failing. No
+        # corrected band exists anywhere in the spec, and inventing one so
+        # that a gate turns green is the practice this project exists to
+        # criticise. results/gpt2_diagnosis.csv reports all thirteen
+        # conventions tried, unselected.
+        block = chk.get("block") or chk.get("block_size")
+        checks.append((block is not None,
+                       "GPT-2 Check-1 reports the sequence length it was "
+                       "measured at (spec s18 amendment)",
+                       "block={}".format(block) if block is not None
+                       else "MISSING: the statistic is not defined without it"))
         checks.append((bool(chk.get("reproduces")),
-                       "GPT-2 reproduces 0.5406/0.3798/0.1608 (+/-0.01)",
+                       "GPT-2 reproduces 0.5406/0.3798/0.1608 (+/-0.01) "
+                       "[known failure: reference has no stated length]",
                        "deltas {}".format({k: round(v, 4) for k, v in
                                            chk["abs_deltas"].items()})))
     return checks

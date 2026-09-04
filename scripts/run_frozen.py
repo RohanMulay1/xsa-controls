@@ -277,6 +277,12 @@ def main(argv=None) -> int:
                     print("      {:9s} measured {:+.4f} vs target {:+.4f} "
                           "(|delta| {:.4f})".format(
                               k, chk["measured"][k], GPT2_TARGET[k], v))
+                # Spec section 18: the reference triple is quoted without a
+                # sequence length and the statistic is strongly
+                # length-dependent, so a Check-1 number is not defined
+                # without one. Record it alongside.
+                chk["block"] = block
+                chk["n_documents"] = m.get("n_documents")
                 (RESULTS / "gpt2_target_check.json").write_text(
                     json.dumps(chk, indent=2), encoding="utf-8")
         else:

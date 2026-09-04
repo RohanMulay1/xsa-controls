@@ -15,5 +15,9 @@
     "excess": 0.023235915647869032
   },
   "tolerance": 0.01,
-  "reproduces": false
+  "reproduces": false,
+  "block": 512,
+  "n_documents": 32,
+  "source_run_id": "de3d0068d550",
+  "length_provenance": "backfilled by matching the recorded measurements to their run record; the two gpt2 records differ in cos_self (0.4828 at block 512, 0.4832 at block 384) so the match is unique"
 }
