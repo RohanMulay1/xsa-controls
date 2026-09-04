@@ -264,6 +264,32 @@ class TestCalibrationConsumption:
         cfg = calibrated_train_config(tmp_path, "S", 349_962_240)
         assert cfg.tokens_per_run == 349_962_240
 
+    def test_nonreportable_smoke_bypasses_production_calibration(
+            self, tmp_path, monkeypatch):
+        from types import SimpleNamespace
+        from scripts import run_factorial
+
+        monkeypatch.setattr(run_factorial, "RESULTS", tmp_path)
+        monkeypatch.setattr(run_factorial, "DATA", tmp_path)
+        monkeypatch.setattr(
+            run_factorial, "calibrated_train_config",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                AssertionError("smoke consulted production calibration")))
+        monkeypatch.setattr(run_factorial, "ensure_smoke_data",
+                            lambda *args, **kwargs: None)
+        monkeypatch.setattr(
+            run_factorial, "run_cell",
+            lambda *args, **kwargs: SimpleNamespace(
+                is_numeric=True, metrics={"final_val_loss": 5.0,
+                                          "tokens_seen": 1024},
+                duration_s=0.0))
+        monkeypatch.setattr(run_factorial, "read_records", lambda path: [])
+
+        assert run_factorial.main([
+            "--smoke", "--seeds", "42", "--arms", "baseline",
+            "--device", "cpu",
+        ]) == 0
+
 
 class TestBudgetHomogeneityGuard:
     """Averaging across token budgets produces a number describing neither.

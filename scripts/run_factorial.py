@@ -269,8 +269,12 @@ def main(argv=None) -> int:
                              "factorial_{}".format(args.size.lower()))
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    train_cfg = calibrated_train_config(RESULTS, args.size,
-                                        args.tokens_per_run)
+    # Smoke runs are deliberately tiny and non-reportable; requiring a
+    # production cost calibration makes the CI harness impossible to run.
+    # Every reportable path still fails closed through the budget loader.
+    train_cfg = (TRAIN if args.smoke else
+                 calibrated_train_config(RESULTS, args.size,
+                                         args.tokens_per_run))
     if args.smoke:
         cfg0 = cell_config("baseline", 0, args.size, True, train_cfg)
         ensure_smoke_data(DATA, cfg0.model.vocab_size)
