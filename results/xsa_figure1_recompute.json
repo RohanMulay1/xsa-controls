@@ -1,0 +1,22 @@
+{
+  "inputs": {
+    "rho": 0.056,
+    "a_ii": 0.05,
+    "cos_self_observed": 0.373
+  },
+  "spec_values": {
+    "floor": 0.2,
+    "excess": 0.165,
+    "percent": 44.0
+  },
+  "spec_is_internally_consistent": false,
+  "floor_implied_by_spec_excess": 0.208,
+  "floor_implied_by_spec_percent": 0.20888,
+  "recomputed": {
+    "n_eff": 43.142857142857174,
+    "floor": 0.2,
+    "cos_self_model": 0.3681584211871571,
+    "excess_vs_observed": 0.173,
+    "percent_self_specific": 46.38069705093833
+  }
+}

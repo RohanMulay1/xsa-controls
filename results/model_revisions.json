@@ -1,0 +1,13 @@
+{
+  "EleutherAI/pythia-1.4b": "fedc38a16eea3bd36a96b906d78d11d2ce18ed79",
+  "EleutherAI/pythia-160m": "50f5173d932e8e61f858120bcb800b97af589f46",
+  "EleutherAI/pythia-2.8b": "2a259cdd96a4beb1cdf467512e3904197345f6a9",
+  "EleutherAI/pythia-410m": "9879c9b5f8bea9051dcb0e68dff21493d67e9d4f",
+  "EleutherAI/pythia-6.9b": "c0e3eee36dc47af0c49f361c74cfe459c09f7f23",
+  "Qwen/Qwen2.5-0.5B": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+  "Qwen/Qwen2.5-1.5B": "8faed761d45a263340a0528343f099c05c9a4323",
+  "gpt2": "607a30d783dfa663caf39e06633721c8d4cfcd7e",
+  "gpt2-large": "32b71b12589c2f8d625668d2335a01cac3249519",
+  "gpt2-medium": "6dcaa7a952f72f9298047fd5137cd6e4f05f41da",
+  "gpt2-xl": "15ea56dee5df4983c59b2538573817e1667135e2"
+}

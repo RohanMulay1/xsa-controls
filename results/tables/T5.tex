@@ -1,0 +1,17 @@
+\begin{table}[t]
+  \centering
+  \caption{Per-head motivating statistic against the measured effect of removing that head's self-value. The disattenuated column divides by sqrt(r\_delta * r\_stat), the ceiling split-half unreliability places on any observable correlation. The raw self-value cosine carries essentially no information about the effect in either Pythia model while the null-corrected excess does; in GPT-2 the ordering reverses, so we report the disagreement rather than the average. n = 3 models, 144 to 384 heads per row.}
+  \label{tab:t5}
+  \begin{tabular}{llrrrrlr}
+    \toprule
+    model & statistic & raw $\rho$ & $r\_\Delta$ & $r\_{stat}$ & disattenuated $\rho$ & verdict & heads \\
+    \midrule
+    gpt2 & cos\_self & 0.450 & 0.752 & 0.993 & 0.521 & reliable & 144 \\
+    gpt2 & excess & 0.190 & 0.752 & 0.993 & 0.220 & reliable & 144 \\
+    pythia-160m & cos\_self & 0.001 & 0.304 & 0.989 & 0.002 & attenuated & 144 \\
+    pythia-160m & excess & 0.396 & 0.304 & 0.989 & 0.723 & attenuated & 144 \\
+    pythia-410m & cos\_self & 0.039 & 0.446 & 0.974 & 0.059 & attenuated & 384 \\
+    pythia-410m & excess & 0.393 & 0.446 & 0.974 & 0.596 & attenuated & 384 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

@@ -1,0 +1,116 @@
+{
+  "reference": {
+    "cos_self": 0.5406,
+    "cos_null": 0.3798,
+    "excess": 0.1608
+  },
+  "tolerance": 0.01,
+  "rows": [
+    {
+      "variant": "length",
+      "block": 64,
+      "cos_self": 0.4954637813130426,
+      "cos_null": 0.3799101515852878,
+      "excess": 0.11555362972775479,
+      "matches_reference": false
+    },
+    {
+      "variant": "length",
+      "block": 128,
+      "cos_self": 0.4902401236823708,
+      "cos_null": 0.3419331140981462,
+      "excess": 0.1483070095842246,
+      "matches_reference": false
+    },
+    {
+      "variant": "length",
+      "block": 256,
+      "cos_self": 0.4862476194030023,
+      "cos_null": 0.31565735205471257,
+      "excess": 0.17059026734828975,
+      "matches_reference": false
+    },
+    {
+      "variant": "length",
+      "block": 512,
+      "cos_self": 0.4832291258575828,
+      "cos_null": 0.3018373632585786,
+      "excess": 0.18139176259900425,
+      "matches_reference": false
+    },
+    {
+      "variant": "length",
+      "block": 1024,
+      "cos_self": 0.4827253733977462,
+      "cos_null": 0.2992323533695374,
+      "excess": 0.18349302002820878,
+      "matches_reference": false
+    },
+    {
+      "variant": "include position 0",
+      "block": 512,
+      "cos_self": 0.4846725145612759,
+      "cos_null": 0.3037722167768556,
+      "excess": 0.1809002977844203,
+      "matches_reference": false
+    },
+    {
+      "variant": "null: any j in sequence",
+      "block": 512,
+      "cos_self": 0.4832291258575828,
+      "cos_null": 0.265035845425855,
+      "excess": 0.2181932804317278,
+      "matches_reference": false
+    },
+    {
+      "variant": "null: token from another sequence",
+      "block": 512,
+      "cos_self": 0.4832291258575828,
+      "cos_null": 0.04434643454106604,
+      "excess": 0.4388826913165168,
+      "matches_reference": false
+    },
+    {
+      "variant": "pool heads before averaging",
+      "block": 512,
+      "cos_self": 0.48322913081695634,
+      "cos_null": 0.3018373673548922,
+      "excess": 0.18139176346206415,
+      "matches_reference": false
+    },
+    {
+      "variant": "layers: first half",
+      "block": 512,
+      "cos_self": 0.5259254053776709,
+      "cos_null": 0.32438137370981696,
+      "excess": 0.2015440316678539,
+      "matches_reference": false
+    },
+    {
+      "variant": "layers: second half",
+      "block": 512,
+      "cos_self": 0.44053284633749473,
+      "cos_null": 0.27962392857039553,
+      "excess": 0.1609089177670992,
+      "matches_reference": false
+    },
+    {
+      "variant": "layers: layer 0 only",
+      "block": 512,
+      "cos_self": 0.6494163369449476,
+      "cos_null": 0.3283798794921798,
+      "excess": 0.3210364574527678,
+      "matches_reference": false
+    },
+    {
+      "variant": "layers: last layer only",
+      "block": 512,
+      "cos_self": 0.5148436864838004,
+      "cos_null": 0.41375693267521757,
+      "excess": 0.10108675380858284,
+      "matches_reference": false
+    }
+  ],
+  "n_reproducing": 0,
+  "explained": false
+}

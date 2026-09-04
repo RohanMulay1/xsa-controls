@@ -1,0 +1,59 @@
+{
+  "model": "gpt2",
+  "rows": [
+    {
+      "method": "attention_sink",
+      "model": "gpt2",
+      "unit": "attention mass",
+      "observed": 0.4027959146575692,
+      "null": 0.003388411775934704,
+      "excess": 0.3994075028816345,
+      "self_specific_fraction": 0.9915877702513063,
+      "survives_null": true,
+      "n": 144,
+      "status": "completed"
+    },
+    {
+      "method": "massive_activations",
+      "model": "gpt2",
+      "unit": "sigma",
+      "observed": 12.871861903203857,
+      "null": 3.6452132264512787,
+      "excess": 9.226648676752578,
+      "self_specific_fraction": 0.7168076185198995,
+      "survives_null": true,
+      "n": 144,
+      "status": "completed"
+    },
+    {
+      "method": "value_residual_diff_transformer",
+      "model": "gpt2",
+      "unit": "",
+      "observed": NaN,
+      "null": NaN,
+      "excess": NaN,
+      "self_specific_fraction": NaN,
+      "survives_null": "",
+      "n": 0,
+      "status": "not_run",
+      "reason": "needs a matched-capacity control, which means training two models rather than measuring one frozen model"
+    },
+    {
+      "method": "registers_vit",
+      "model": "gpt2",
+      "unit": "",
+      "observed": NaN,
+      "null": NaN,
+      "excess": NaN,
+      "self_specific_fraction": NaN,
+      "survives_null": "",
+      "n": 0,
+      "status": "not_run",
+      "reason": "vision transformers, and the matched control is added tokens; out of scope for a causal-LM harness"
+    }
+  ],
+  "not_implemented": {
+    "value_residual_diff_transformer": "needs a matched-capacity control, which means training two models rather than measuring one frozen model",
+    "registers_vit": "vision transformers, and the matched control is added tokens; out of scope for a causal-LM harness"
+  }
+}

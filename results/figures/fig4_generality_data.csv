@@ -1,0 +1,5 @@
+method,model,unit,observed,null,excess,self_specific_fraction,survives_null,n,status,reason
+attention_sink,gpt2,attention mass,0.4027959146575692,0.003388411775934704,0.3994075028816345,0.9915877702513063,True,144,completed,
+massive_activations,gpt2,sigma,12.871861903203857,3.6452132264512787,9.226648676752578,0.7168076185198995,True,144,completed,
+value_residual_diff_transformer,gpt2,,nan,nan,nan,nan,,0,not_run,"needs a matched-capacity control, which means training two models rather than measuring one frozen model"
+registers_vit,gpt2,,nan,nan,nan,nan,,0,not_run,"vision transformers, and the matched control is added tokens; out of scope for a causal-LM harness"
