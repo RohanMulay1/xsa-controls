@@ -241,7 +241,32 @@ as a critique: correcting for the matched null does not merely lower a number,
 it recovers a statistic that tracks the intervention.
 
 **In GPT-2 the ordering reverses.** The raw cosine predicts (+0.450) and the
-excess does not (+0.190). We report this rather than averaging over it. Two
+excess does not (+0.190). We report this rather than averaging over it.
+
+### 5.1 The prior values for this correlation are not usable
+
+The specification we worked from quotes prior GPT-2 values for exactly this
+correlation: **Spearman 0.043 / 0.017 / -0.021** for `cos_self`, `excess` and
+`a_ii`. Taken at face value they say the motivating statistic is unrelated to
+where the intervention helps, and that any larger number is suspect. Our
++0.450 on GPT-2 is an order of magnitude above the first of them, so the
+discrepancy has to be addressed rather than left for a reader to find.
+
+Those values were measured on `SAMPLE_TEXT * 200`: one paragraph repeated two
+hundred times, base loss 0.76 nats against 3.96 for real prose. The
+specification's own bug list identifies that input as a defect to fix before
+porting anything, and the reason it matters here is specific rather than
+general. A correlation across heads needs variation across heads. One
+paragraph repeated gives a model very little to do differently in different
+heads, so the per-head effects it produces are small and largely
+undifferentiated, and correlating them against anything returns approximately
+zero. Near-zero on that input is a property of the input.
+
+Measured on 24 real wikitext-103 documents per half, with disjoint halves and
+the reliability of the effect established first, the same correlation is
++0.450 on GPT-2 with a ceiling of 0.864. The prior figures are superseded,
+not contradicted: they are not measurements of the quantity they appear to
+describe. `DEVIATIONS.md` D8 records this. Two
 models agreeing and a third disagreeing is not a general law about statistics,
 and the honest summary is narrower than the one we would have liked to write:
 whether the raw statistic predicts its own intervention is model-dependent,
