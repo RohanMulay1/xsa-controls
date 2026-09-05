@@ -31,10 +31,9 @@ we withdrew that project's headline claim (§6). We report this as our own
 prior work, not as an independent replication of a third party.
 
 We do not claim to refute XSA. Our training leg runs at 51M parameters against
-XSA's 0.7-2.7B, and at the token budget we could afford the design is
-underpowered by about sevenfold against the effect size an independent
-replication measured (§5). We report that as a power failure, not as a null
-result.
+XSA's 0.7-2.7B, and at the token budget we could afford the design resolves
+the XSA arm only to about 6x the effect size an independent replication
+measured (§5). We report that as a power failure, not as a null result.
 
 ---
 
@@ -106,11 +105,10 @@ the softmax row becomes all `-inf` and produces NaN.
 
 ## 3. Check 1 across scale (A1)
 
-Eleven models and 6,080 head-level rows in total, 32 wikitext-103 documents
+Twelve models and 6,784 head-level rows in total, 32 wikitext-103 documents
 each, eager attention, null partner drawn within the sequence from positions
 the query could causally attend. Table 1 reports the nine multi-head models
-(5,408 heads); the two grouped-query models (672 heads) plus TinyLlama-1.1B
-are in Table 2,
+(5,408 heads); the three grouped-query models (1,376 heads) are in Table 2,
 because the within/across-group split does not exist for multi-head attention.
 
 **Table 1.** Check 1 across the multi-head ladder. `n = 9 MHA models, 5,408 heads.`
@@ -175,8 +173,21 @@ architecture families, 1,376 heads.`
 | TinyLlama-1.1B | 32 / 4 | **+0.2373** | **-0.1126** |
 
 Borrowing a neighbouring group's value at the same position does not merely
-lose the effect; it goes **negative**. The self-value direction is specific to
-the shared KV group. GQA models also show a higher self-specific fraction, 56
+weaken the effect; the excess goes **negative**. That word needs unpacking,
+because the obvious reading of it is wrong.
+
+The raw across-group cosine is **approximately zero**: -0.0006, +0.0009 and
++0.0013 for the three models. A query head's output is essentially
+**orthogonal** to the values of KV groups it does not belong to. There is no
+anti-alignment and we do not claim one. The negative excess is arithmetic:
+excess subtracts the within-sequence null, which is positive (0.187, 0.193,
+0.114), so `0 - cos_null = -cos_null` and the three numbers reproduce exactly.
+
+What the measurement shows is therefore sharper than "it reverses": the
+self-value alignment the method is built on is **entirely specific to the
+head's own KV group**, and disappears completely across groups rather than
+merely shrinking. The self-value direction is a property of the shared KV
+group, not of the query head. GQA models also show a higher self-specific fraction, 56
 to 68%, than any MHA model on the ladder, 37 to 52%. GQA is not a neutral
 change of variable for this family of methods. (Figure 5.)
 
@@ -305,24 +316,41 @@ step 0; measured deviation across all five arms is **0.000e+00**.
 
 At the token budget we could afford, 5e7 tokens per run:
 
-**Table 4.** Paired difference against baseline, CFG_S.
+**Table 4.** Paired difference against baseline, CFG_S underpowered pilot.
+`n = 8 seeds per arm.`
 
-| arm | mean delta | 95% CI | t | p | n |
-|---|---|---|---|---|---|
-| **random** (pre-registered primary) | +0.000921 | [-0.000673, +0.002515] | +0.92 | 0.426 | 4 |
-| xsa | +0.000528 | [-0.002500, +0.005420] | +0.21 | 0.848 | 4 |
+| arm | mean delta | 95% CI | t | p | Cohen d_z | realised sigma | MDE at n=8 |
+|---|---|---|---|---|---|---|---|
+| **random** (pre-registered primary) | **+0.001190** | [+0.000351, +0.002040] | +2.48 | **0.042** | 0.877 | 0.001356 | 0.00139 |
+| xsa | +0.001515 | [-0.001223, +0.004807] | +0.92 | 0.387 | 0.326 | 0.004642 | 0.00476 |
 
-`sigma_paired = 0.00505` gives a minimum detectable effect of **0.00518 nats**.
-The effect an independent replication measured is **0.00076 nats**. The design
-as run is therefore underpowered by about **sevenfold**, and both intervals
-span zero and each other.
+Read the sign first. Both arms are **positive**, meaning both interventions are
+*worse* than baseline at this budget, and the matched arbitrary direction is
+significantly so (p = 0.042, interval excluding zero). They are also not
+distinguishable from each other. At 5e7 tokens per run the models are far below
+the spec's 3.5e8 floor, and a gated rank-one removal plausibly just costs
+capacity there.
 
-**Check 2 returns no verdict at this power.** That is not evidence that XSA and
-a matched arbitrary direction are equivalent, and we do not present it as such.
-The binding constraint is tokens per run rather than seeds: moving from 4 to 12
-seeds improves the MDE only by `sqrt(3)`. We report the power calculation
-because a paper that reports the point estimate without it would be claiming a
-null it cannot support.
+**Power, stated per arm rather than once.** The minimum detectable effect
+depends on the arm's realised paired standard deviation, and the two arms
+differ by a factor of 3.4. Against the **0.00076 nats** an independent
+replication reports:
+
+* the primary endpoint (`random`) resolves to **0.00139**, about **1.8x** the
+  target effect;
+* the arm that matters for the method (`xsa`) resolves to **0.00476**, about
+  **6.3x** it.
+
+A separate figure, **0.00518**, appears in `results/pilot_decision.json`. That
+is the Day-3 **planning** MDE, forecast from a three-seed pilot with
+`sigma_paired = 0.005049` before the factorial was run. It is what sized the
+design, not what the design achieved, and it should not be quoted as a
+measured result. The realised sigmas above are 3.7x and 1.1x smaller.
+
+**Check 2 returns no verdict on XSA at this power.** That is not evidence that
+XSA and a matched arbitrary direction are equivalent, and we do not present it
+as such. We report the power calculation because a paper reporting the point
+estimate without it would be claiming a null it cannot support.
 
 ---
 
@@ -374,9 +402,10 @@ the practice this paper argues against.
   parameters. XSA trains at 0.7-2.7B. We *measure* frozen statistics to 6.9B,
   which covers XSA's range, but a frozen statistic is not a training result.
   **We cannot and do not claim to refute XSA at its scale.**
-* **The training leg is underpowered** by about sevenfold at the budget we
-  could afford (§5). Its point estimates are reported with that caveat attached
-  and are not evidence of equivalence.
+* **The training leg is underpowered** at the budget we could afford (§5),
+  resolving the XSA arm to 0.00476 nats against a 0.00076 target, about 6x.
+  The primary `random` arm is tighter at 0.00139, about 1.8x. Point estimates
+  are reported with that caveat attached and are not evidence of equivalence.
 * **The 124M scale check was not run.** The budget solver dropped it in the
   pre-registered priority order rather than shrinking the primary endpoint.
 * **Two of four A6 methods are not measured.** Value-residual needs a

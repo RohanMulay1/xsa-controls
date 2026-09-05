@@ -17,7 +17,7 @@
 | Coverage | 74% | **90%** |
 | `calibrate.py` coverage | **0%** | **96%** |
 | Experiments executed | 3, all CPU | A1 ladder to 6.9B, A3 GQA, A6, calibration, pilot, **24-cell CFG_S factorial**, GPT-2 diagnosis |
-| Figures from real data | 0 of 5 | **5 of 5, none skipped** |
+| Figures from real data | 0 of 5 | **7 of 7, none skipped** |
 | Paper artifacts (tables, manifest, repro, example) | 0 | **T1-T4 + T6, self-verifying manifest, REPRODUCE.md, worked example** |
 | Day gates passing | 1 | **1, 2, 3, 8, 9, 10** |
 
@@ -46,20 +46,26 @@ significantly so. They are also indistinguishable from each other: +0.0012 and
 **This is not a refutation of XSA and we do not present it as one.** At 5e7
 tokens per run the models are trained far below the spec's 3.5e8 floor, and a
 gated rank-one removal plausibly just costs capacity there. The measured MDE
-(0.00518 nats) remains about sevenfold larger than the effect XSA's independent
-replication reports (0.00076), so this design still cannot resolve the claimed
-effect in either direction.
+for the `xsa` arm (0.00476 nats, realised) remains about **6x** larger than the
+effect XSA's independent replication reports (0.00076), so this design still
+cannot resolve the claimed effect in either direction. The primary `random`
+arm is tighter at 0.00139. The 0.00518 figure quoted previously was the Day-3
+**planning** MDE from a three-seed pilot, not a realised result.
 
-**2. The scale objection, answered with measurement.** Eleven models, 6,080
-head rows (nine MHA, 5,408 heads; two GQA, 672). **58% of `cos(y_i, v_i)` is
+**2. The scale objection, answered with measurement.** Twelve models, 6,784
+head rows (nine MHA, 5,408 heads; three GQA, 1,376). **58% of `cos(y_i, v_i)` is
 still the null at Pythia-6.9B**, and roughly half across XSA's own 0.7-2.7B
 training range. We make no claim about a scale *trend*: the share the null
 explains is non-monotone within Pythia (63.1%, 48.1%, 49.2%, 52.2%, 58.1%
 from 160M to 6.9B), falling to a minimum at 410M and rising thereafter.
 
 **3. GQA behaves structurally differently, and nobody had checked.**
-Within-group excess +0.2415 and +0.2731; across-group excess **negative**,
--0.1876 and -0.1922.
+Within-group excess +0.2415, +0.2731 and +0.2373; across-group excess
+**negative**, -0.1876, -0.1922 and -0.1126. The negative sign is arithmetic
+rather than anti-alignment: the raw across-group cosine is approximately zero
+(-0.0006, +0.0009, +0.0013), so subtracting the positive within-sequence null
+gives exactly `-cos_null`. The finding is that the self-value alignment is
+entirely specific to the head's own KV group and vanishes across groups.
 
 **4. The checklist discriminates.** Attention sinks retain 99.2% of their
 statistic after a matched-position null and massive activations 71.7% against a
@@ -114,7 +120,7 @@ families; the magnitude is about 40% smaller and is reported as such.
 | 5 | `ladder.csv`, nine models to 6.9B | **DONE** | 5,408 head rows |
 | 6 | `gqa.csv` | **DONE** | Three GQA models across two architecture families |
 | 7 | `generality.csv` (A6) | **DONE per spec** | Spec requires two minimum; two measured, two recorded blocked with reasons |
-| 8 | Figures 1-5 | **DONE** | All five from real data, png + pdf + source CSV each |
+| 8 | Figures 1-7 | **DONE** | All seven from real data, png + pdf + source CSV each. Figures 1 and 2 draw the underpowered 5e7 pilot until the primary endpoint lands, labelled as such in the panel title and a footer |
 | 9 | `checks.py` clean API | **DONE** | 91% covered |
 | 10 | `BUDGET.md` under $70 | **DONE** | ~$12 spent; the $66 threshold is now enforced in code |
 | 11 | Draft | **DONE** | `paper/draft.md`; Day-10 gate passes 5/5 |
@@ -216,7 +222,7 @@ pytest                    # 214 tests
 | GPT-2 diagnosis | `results/gpt2_diagnosis.csv` (13 configurations, unselected) |
 | Factorial and paired tests | `results/factorial_s.csv`, `paired_tests_s.csv` |
 | Day-3 decision | `results/pilot_decision.json`, `BUDGET.md` |
-| Figures | `results/figures/` (5, none skipped) |
+| Figures | `results/figures/` (7, none skipped) |
 | Audit | `AUDIT.md` |
 | Deviations from spec | `DEVIATIONS.md` |
 

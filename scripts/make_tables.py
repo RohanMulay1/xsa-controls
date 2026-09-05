@@ -130,10 +130,13 @@ def table1_ladder():
              "{:.1f}".format(100 - nullpc), "{:d}".format(n)]
             for m, cs, cn, ex, nullpc, n in out]
     emit("T1",
-         "Check 1 across the multi-head scale ladder. The null is a partner "
-         "drawn within the same sequence from positions the query could "
-         "causally attend, so it is matched for position, recency and "
-         "sequence. n = {} models, {} heads, 32 wikitext-103 documents "
+         "Check 1 across the multi-head scale ladder. The null partner is "
+         "drawn uniformly from the positions the query could causally "
+         "attend, so it is matched for sequence and for causal "
+         "admissibility. It is NOT matched for position or for lag: a "
+         "uniform draw sits further back on average than the query's own "
+         "attention mass, so the null understates any purely recency-driven "
+         "component. n = {} models, {} heads, 32 wikitext-103 documents "
          "each.".format(len(out), sum(t[5] for t in out)),
          ["model", "params", "cos\\_self", "cos\\_null", "excess",
           "\\% self-specific", "heads"],
@@ -153,9 +156,12 @@ def table2_gqa():
              r["n_heads"]] for r in gqa]
     emit("T2",
          "Check 1 under grouped-query attention, split by whether the null "
-         "partner comes from the head's own KV group. Borrowing a "
-         "neighbouring group's value at the same position does not merely "
-         "lose the effect, it reverses it. n = {} GQA models, {} heads."
+         "partner comes from the head's own KV group. The raw across-group "
+         "cosine is approximately zero, so a query head's output is "
+         "orthogonal to values outside its group; the negative excess is "
+         "that zero minus the positive within-sequence null, not "
+         "anti-alignment. The self-value alignment is specific to the "
+         "head's own KV group. n = {} GQA models, {} heads."
          .format(len(gqa), sum(int(r["n_heads"]) for r in gqa)),
          ["model", "query heads", "KV heads", "within-group excess",
           "across-group excess", "heads"],

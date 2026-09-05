@@ -153,8 +153,12 @@ def main(argv=None) -> int:
             ("massive_activations", massive_activations, "sigma",
              "max |h| / sigma", "Gaussian max sqrt(2 ln d)")):
         out = fn(probe, batches)
+        # Pass layer indices where the measurement is per-(layer, head), so
+        # the interval resamples layers rather than treating heads within a
+        # layer as independent draws.
         res = check_null(out["observed"], out["null"], label=name,
-                         stat_name=stat_name, null_name=null_name)
+                         stat_name=stat_name, null_name=null_name,
+                         clusters=out.get("layers"))
         rows.append({
             "method": name, "model": args.model, "unit": unit,
             "observed": out["observed"], "null": out["null"],

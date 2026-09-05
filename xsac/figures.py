@@ -125,22 +125,41 @@ def _num(v: Any) -> float:
 # Figure 1 - learned gates per layer and head
 # ---------------------------------------------------------------------------
 
+#: Where a factorial figure looks for its data, in priority order: the primary
+#: endpoint first, the underpowered pilot only as a fallback. A figure built
+#: from the pilot says so in its title, because a reader who cannot tell which
+#: budget a panel came from will assume the primary one.
+def factorial_source(results: Path, stem: str):
+    """Return (rows, label, is_pilot) for the best available factorial data."""
+    for name, label, pilot in (
+            ("{}_s.csv".format(stem), "CFG_S", False),
+            ("{}_m.csv".format(stem), "CFG_M", False),
+            ("{}_s_pilot_5e7.csv".format(stem),
+             "CFG_S underpowered pilot, 5e7 tokens/run", True)):
+        rows = read_csv(Path(results) / name)
+        if rows:
+            return rows, label, pilot
+    return [], "", False
+
+
 def fig1_gates(results: Path, out_dir: Path) -> List[Path]:
     """If ``random`` learns positive gates comparable to ``xsa``, this panel
     IS the result: a matched arbitrary direction was worth removing too."""
     import json
 
-    src = Path(results) / "factorial_s.csv"
-    rows = read_csv(src)
+    rows, source_label, from_pilot = factorial_source(results, "factorial")
     if not rows:
         raise FigureSkipped(
-            "missing {}. Run: python scripts/run_factorial.py".format(src))
+            "no factorial_*.csv in {}. Run: python scripts/run_factorial.py"
+            .format(results))
 
     gated = [r for r in rows if r.get("learned_alpha")
              and r.get("status") in ("completed", "smoke")
              and r.get("arm") in ("xsa", "random", "meanval", "diagmask")]
     if not gated:
-        raise FigureSkipped("no runs with learned gates in {}".format(src))
+        raise FigureSkipped(
+            "no runs with learned gates in the {} factorial"
+            .format(source_label))
 
     arms = [a for a in ("xsa", "random", "meanval", "diagmask")
             if any(r["arm"] == a for r in gated)]
@@ -176,8 +195,13 @@ def fig1_gates(results: Path, out_dir: Path) -> List[Path]:
         _style(ax, "layer", "tanh(alpha)  (dimensionless)", arm)
         ax.legend(frameon=False, fontsize=8)
     n = len({(r["arm"], r["seed"]) for r in gated})
-    fig.suptitle("Figure 1  Learned gate per layer and head  (n = {} runs)"
-                 .format(n), fontsize=11, x=0.02, ha="left")
+    # The budget goes in the title, not a caption someone may not read.
+    fig.suptitle("Figure 1  Learned gate per layer and head  (n = {} runs, {})"
+                 .format(n, source_label), fontsize=11, x=0.02, ha="left")
+    if from_pilot:
+        fig.text(0.02, -0.02, "UNDERPOWERED PILOT: 5e7 tokens per run, "
+                 "outside the pre-registered [3.5e8, 6e8] band. Not the "
+                 "primary endpoint.", fontsize=8.5, color=SERIES["random"])
     return _save(fig, out_dir, "fig1_gates", data_rows)
 
 
@@ -191,9 +215,15 @@ def fig2_paired_delta(results: Path, out_dir: Path) -> List[Path]:
         rows = read_csv(Path(results) / "paired_tests_{}.csv".format(size))
         if rows:
             frames.append((size.upper(), rows))
+    from_pilot = False
+    if not frames:
+        rows, label, from_pilot = factorial_source(results, "paired_tests")
+        if rows:
+            frames.append((label, rows))
     if not frames:
         raise FigureSkipped(
-            "missing paired_tests_*.csv. Run: python scripts/run_factorial.py")
+            "no paired_tests_*.csv in {}, including the pilot. Run: python "
+            "scripts/run_factorial.py".format(results))
 
     fig, axes = plt.subplots(1, len(frames), figsize=(5.0 * len(frames), 4.0),
                              squeeze=False, sharey=True)
@@ -223,11 +253,16 @@ def fig2_paired_delta(results: Path, out_dir: Path) -> List[Path]:
         ax.set_xticks(xs)
         ax.set_xticklabels(arms, fontsize=8.5)
         _style(ax, "arm", "paired delta val loss vs baseline (nats)",
-               "CFG_{}".format(size))
+               size if size.startswith("CFG_")
+               else "CFG_{}".format(size))
     ns = ",".join(str(r.get("n_seeds", "?")) for _, rows in frames
                   for r in rows[:1])
     fig.suptitle("Figure 2  Paired delta loss, 95% CI  (n = {} seeds)"
                  .format(ns), fontsize=11, x=0.02, ha="left")
+    if from_pilot:
+        fig.text(0.02, -0.02, "UNDERPOWERED PILOT: 5e7 tokens per run, "
+                 "outside the pre-registered [3.5e8, 6e8] band. Not the "
+                 "primary endpoint.", fontsize=8.5, color=SERIES["random"])
     return _save(fig, out_dir, "fig2_paired_delta", data_rows)
 
 
@@ -320,13 +355,22 @@ def fig4_generality(results: Path, out_dir: Path) -> List[Path]:
     observed = [_num(r["observed"]) for r in rows]
     null = [_num(r["null"]) for r in rows]
     xs = np.arange(len(methods))
+    # These statistics are not commensurate: attention mass is a probability
+    # in [0, 1] (0.40) and the activation ratio is an unbounded norm (12.87).
+    # On one linear axis the attention-sink bars are flattened to nothing, so
+    # the panel silently hides one of the two results it exists to show.
+    # A log axis keeps both readable; the y label says the units differ.
     ax.bar(xs - 0.2, observed, width=0.36, color=SERIES["xsa"],
            label="observed statistic", zorder=2)
     ax.bar(xs + 0.2, null, width=0.36, color=SERIES["random"],
            hatch="///", edgecolor=SURFACE, label="null", zorder=2)
+    if max(observed + null) / max(min(x for x in observed + null
+                                      if x > 0), 1e-9) > 50:
+        ax.set_yscale("log")
     ax.set_xticks(xs)
     ax.set_xticklabels(methods, fontsize=8, rotation=15, ha="right")
-    _style(ax, "method", "statistic value (dimensionless)",
+    _style(ax, "method",
+           "statistic value, log scale (units differ per method)",
            "Figure 4  Check 1 applied to five methods")
     ax.legend(frameon=False, fontsize=8.5)
     ax.annotate("n = {} methods".format(len(rows)), xy=(0.99, 0.95),

@@ -123,3 +123,36 @@ class TestWorkedExample:
                          "Check 0 resolvable", "Check 1 beats null",
                          "Check 2 beats control"):
             assert expected in out.stdout
+
+
+class TestClusteredIntervals:
+    """Heads within a layer are not independent draws.
+
+    The specification's own bug list flags exactly this: 72 rows carrying 24
+    independent values gave an interval far too narrow. cluster_bootstrap_ci
+    was written for it and was not wired into check_null until now.
+    """
+
+    def test_clustering_widens_the_interval(self):
+        import numpy as np
+        from xsac.checks import check_null
+        rng = np.random.default_rng(0)
+        layers = np.repeat(np.arange(12), 12)
+        # Give each layer its own offset, so heads within a layer really are
+        # correlated and the row-level interval really is too narrow.
+        offs = rng.normal(0, 0.08, 12)
+        cos_self = np.array([0.5 + offs[l] + rng.normal(0, 0.02)
+                             for l in layers])
+        cos_null = np.array([0.3 + offs[l] + rng.normal(0, 0.02)
+                             for l in layers])
+        rows = check_null(cos_self, cos_null)
+        clus = check_null(cos_self, cos_null, clusters=layers)
+        assert (clus.ci_high - clus.ci_low) > (rows.ci_high - rows.ci_low)
+
+    def test_default_is_unchanged_for_callers_without_clusters(self):
+        import numpy as np
+        from xsac.checks import check_null
+        rng = np.random.default_rng(1)
+        a, b = rng.normal(0.5, 0.1, 60), rng.normal(0.3, 0.1, 60)
+        assert check_null(a, b).excess == pytest.approx(
+            check_null(a, b, clusters=None).excess)

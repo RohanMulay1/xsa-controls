@@ -1,6 +1,6 @@
 \begin{table}[t]
   \centering
-  \caption{Check 1 under grouped-query attention, split by whether the null partner comes from the head's own KV group. Borrowing a neighbouring group's value at the same position does not merely lose the effect, it reverses it. n = 3 GQA models, 1376 heads.}
+  \caption{Check 1 under grouped-query attention, split by whether the null partner comes from the head's own KV group. The raw across-group cosine is approximately zero, so a query head's output is orthogonal to values outside its group; the negative excess is that zero minus the positive within-sequence null, not anti-alignment. The self-value alignment is specific to the head's own KV group. n = 3 GQA models, 1376 heads.}
   \label{tab:t2}
   \begin{tabular}{lrrrrr}
     \toprule

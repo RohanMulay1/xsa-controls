@@ -6,6 +6,7 @@
   "EleutherAI/pythia-6.9b": "c0e3eee36dc47af0c49f361c74cfe459c09f7f23",
   "Qwen/Qwen2.5-0.5B": "060db6499f32faf8b98477b0a26969ef7d8b9987",
   "Qwen/Qwen2.5-1.5B": "8faed761d45a263340a0528343f099c05c9a4323",
+  "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T": "59f6f375b26bde864a6ca194a9a3044570490064",
   "gpt2": "607a30d783dfa663caf39e06633721c8d4cfcd7e",
   "gpt2-large": "32b71b12589c2f8d625668d2335a01cac3249519",
   "gpt2-medium": "6dcaa7a952f72f9298047fd5137cd6e4f05f41da",

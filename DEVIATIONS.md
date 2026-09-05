@@ -246,7 +246,7 @@ tenfold gap against the prior figure is not a one-run artifact.
 
 **The ordering also reverses across models,** which no single prior number
 could have expressed. On both Pythia models the raw statistic carries
-essentially nothing (+0.001, +0.039) while the null-corrected excess carries
+essentially nothing (+0.014, +0.099) while the null-corrected excess carries
 most of it; on GPT-2 the reverse. We report the disagreement rather than the
 average, and the claim we make is correspondingly narrow: whether a raw
 statistic predicts its own intervention is model-dependent.

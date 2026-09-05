@@ -73,6 +73,7 @@ from typing import Dict, List, Optional, Sequence
 from xsac.stats import (
     disattenuate,
     holm_bonferroni,
+    cluster_bootstrap_ci,
     mean_ci,
     paired_test,
     replicate_agreement,
@@ -334,7 +335,8 @@ def check_resolvability(effect_half_a: Sequence[float],
 def check_null(cos_self, cos_null, label: str = "",
                paired: bool = True, seed: int = 0,
                stat_name: str = "cos(y_i, v_i)",
-               null_name: str = "cos(y_i, v_j)") -> NullResult:
+               null_name: str = "cos(y_i, v_j)",
+               clusters=None) -> NullResult:
     """Check 1. How much of a similarity statistic survives its null?
 
     Accepts either two scalars (already-averaged values, as reported in a
@@ -367,8 +369,19 @@ def check_null(cos_self, cos_null, label: str = "",
     mean_n = sum(b) / len(b) if b else float("nan")
     if paired:
         diffs = [x - y for x, y in zip(a, b)]
-        ci = mean_ci(diffs, seed=seed)
-        excess, lo, hi, n = ci["mean"], ci["ci_low"], ci["ci_high"], ci["n"]
+        # Heads within a layer are not independent draws. Passing their layer
+        # index resamples whole layers instead of rows, which is the fix for
+        # the pseudoreplication the specification's own bug list flags: 72
+        # rows carrying 24 independent values gave an interval far too narrow.
+        # Row-level bootstrap remains the default so callers without cluster
+        # information are unchanged, but they get a wider-than-honest interval
+        # and should pass clusters where they have them.
+        ci = (cluster_bootstrap_ci(diffs, clusters, seed=seed)
+              if clusters is not None else mean_ci(diffs, seed=seed))
+        # cluster_bootstrap_ci reports n_rows/n_clusters rather than n. The
+        # reported n stays the number of observations either way.
+        excess, lo, hi = ci["mean"], ci["ci_low"], ci["ci_high"]
+        n = ci.get("n", ci.get("n_rows", len(diffs)))
     else:
         excess = mean_s - mean_n
         lo = hi = float("nan")

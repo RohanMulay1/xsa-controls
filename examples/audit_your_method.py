@@ -74,8 +74,13 @@ def measure_statistic_per_head(eval_half: int) -> np.ndarray:
 def measure_null_per_head() -> np.ndarray:
     """The same statistic against a partner the method does not call special.
 
-    Match it to every structure the statistic inherits for free: position,
-    recency, sequence, and norm. An unmatched null makes any method look good.
+    Match it to whatever structure the statistic inherits for free. This
+    repository's own null matches sequence and causal admissibility by drawing
+    uniformly from positions the query could attend; it does NOT match
+    position or lag, so it cannot separate a recency effect from a
+    self-specific one. Say which structures your null controls, and which it
+    does not: an unmatched null makes any method look good, and a null that
+    claims more matching than it does is worse than an honest weak one.
     """
     return _once("null", lambda: RNG.standard_normal(N_HEADS) * 0.3 + 0.30)
 

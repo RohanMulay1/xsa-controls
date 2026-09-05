@@ -76,6 +76,7 @@ reproduced here:
 | EleutherAI/pythia-6.9b | `c0e3eee36dc47af0c49f361c74cfe459c09f7f23` |
 | Qwen/Qwen2.5-0.5B | `060db6499f32faf8b98477b0a26969ef7d8b9987` |
 | Qwen/Qwen2.5-1.5B | `8faed761d45a263340a0528343f099c05c9a4323` |
+| TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T | `59f6f375b26bde864a6ca194a9a3044570490064` |
 
 ## Seeds
 
@@ -126,7 +127,8 @@ python scripts/make_tables.py && python scripts/make_manifest.py
 |---|---|---|---|
 | Calibration + data prep + pilot | RTX 6000 Ada @ $0.74/hr | ~3 h | ~$2.20 |
 | A1 ladder, A3 GQA, A5, A6, GPT-2 diagnosis | RTX 6000 Ada / A100 | ~4.5 h | ~$3.35 |
-| CFG_S factorial, 24 cells | RTX 6000 Ada @ $0.74/hr | ~7.5 h | ~$5.55 |
+| CFG_S pilot factorial, 24 cells at 5e7 | RTX 6000 Ada @ $0.74/hr | ~7.5 h | ~$5.55 |
+| CFG_S primary, 24 cells at 3.999e8 | RTX 6000 Ada @ $0.74/hr | ~16 h | ~$11.81 |
 | Long-context bounded diagnostic | A100-SXM4-80GB @ $1.39/hr | ~1.5 h | ~$2.10 |
 
 Running totals are kept in `BUDGET.md` against a $70 ceiling, with a $66
@@ -137,14 +139,20 @@ declared.
 
 Stated so that no one wastes a GPU-hour finding out.
 
-* **`results/factorial_m.csv` does not exist.** The primary endpoint at CFG_M
-  has not been run. The committed `factorial_s.csv` ran at 5e7 tokens per run,
-  outside the pre-registered [3.5e8, 6e8] band, and is reported as an
+* **`results/factorial_m.csv` does not exist.** The CFG_M scale check is
+  dropped for budget, with the arithmetic in `BUDGET.md`.
+* **`results/factorial_s.csv` does not exist yet.** The primary endpoint at
+  399,900,672 tokens per run is running; see `RUN_IN_PROGRESS.md`. What is
+  committed is `factorial_s_pilot_5e7.csv`, 24 cells at 5e7 tokens per run,
+  outside the pre-registered [3.5e8, 6e8] band and reported as the
   underpowered pilot. `run_factorial.py` now refuses to start below the floor
   without `--i-accept-underpowered`.
-* **`results/reliability.csv` and `results/a2_correlations.csv` do not exist.**
-  `check_resolvability()` is implemented and tested but has not been run
-  against per-head XSA interventions.
+* **The A2 measurement is sensitive to evaluation budget.** At 24 documents
+  per half the Pythia reliability estimates are not stable: repeating the run
+  moved pythia-410m's `r_delta` from +0.446 to -0.007. `results/reliability.csv`
+  and `results/a2_correlations.csv` hold the 64-document run; both 24-document
+  runs are kept in `results/a2_budget_comparison/`. Reproduce with
+  `python scripts/run_reliability.py --n-docs 64 --device cuda --dtype bfloat16`.
 * **The published GPT-2 reference triple does not reproduce.** Thirteen
   measurement conventions were tried and all thirteen are reported unselected
   in `results/gpt2_diagnosis.csv`. No configuration is presented as the correct

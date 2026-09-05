@@ -69,11 +69,18 @@ class HeadIntervention:
     """
 
     def __init__(self, probe, layer_idx: int, heads: Optional[Sequence[int]],
-                 strength: float = 1.0):
+                 strength: float = 1.0, min_position: int = 1):
         self.probe = probe
         self.layer_idx = layer_idx
         self.heads = None if heads is None else list(heads)
         self.strength = strength
+        #: Positions below this are left alone, matching the diagnostic's
+        #: own ``min_position``. Position 0 is degenerate: causal softmax over
+        #: one element gives a_00 = 1, so y_0 = v_0 exactly and removing the
+        #: self-value component sets the whole head output to zero there. The
+        #: passive statistic excludes position 0 for that reason; intervening
+        #: on it while measuring without it compares two different objects.
+        self.min_position = min_position
         self._hidden: Optional[torch.Tensor] = None
         self._handles: List[torch.utils.hooks.RemovableHandle] = []
         #: The unmodified input to the output projection, kept for the
@@ -117,9 +124,10 @@ class HeadIntervention:
         yh = y.view(b, t, nq, head_dim)
         heads = range(nq) if self.heads is None else self.heads
         out = yh.clone()
+        lo = min(self.min_position, t)
         for h in heads:
-            out[:, :, h, :] = remove_self_value(
-                yh[:, :, h, :], v[:, :, h, :].to(yh.dtype), self.strength)
+            out[:, lo:, h, :] = remove_self_value(
+                yh[:, lo:, h, :], v[:, lo:, h, :].to(yh.dtype), self.strength)
         self.n_applied += 1
         self.total_change += (out - yh).abs().sum().item()
         return (out.view(b, t, nq * head_dim),) + tuple(args[1:])
@@ -143,9 +151,10 @@ class HeadIntervention:
 @contextmanager
 def xsa_intervention(probe, layer_idx: int,
                      heads: Optional[Sequence[int]] = None,
-                     strength: float = 1.0):
+                     strength: float = 1.0, min_position: int = 1):
     """Context manager applying XSA to ``heads`` of one layer."""
-    with HeadIntervention(probe, layer_idx, heads, strength) as h:
+    with HeadIntervention(probe, layer_idx, heads, strength,
+                          min_position) as h:
         yield h
 
 

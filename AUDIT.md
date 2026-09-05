@@ -6,7 +6,7 @@ every experiment named was executed on the hardware stated.
 
 **Date:** 2026-09-03
 **Compute:** RunPod RTX 6000 Ada 48GB, community, $0.74/hr
-**Spent:** approximately $5.55 of the $70 ceiling
+**Spent:** $11.36 of the $70 ceiling (see BUDGET.md for the ledger)
 
 ---
 
@@ -21,7 +21,7 @@ every experiment named was executed on the hardware stated.
 | GPU-only defects found | none looked for | **1 crash-on-every-run bug** |
 | Definition-of-done items complete | 4 of 15 | **8 of 11 DONE, 2 PARTIAL, 1 BLOCKED** |
 | Day gates passing | 1 | **1, 3, 8, 9** (4, 5, 6 at 4/5; 7 at 3/4) |
-| Figures from real data | 0 of 5 | **5 of 5** |
+| Figures from real data | 0 of 5 | **7 of 7** |
 
 ---
 
@@ -32,15 +32,15 @@ Spec section 15, verbatim, with status and evidence.
 | # | Item | Status | Evidence / reason |
 |---|---|---|---|
 | 1 | All 10 self-tests green | **DONE** | 10/10; step-0 deviation 0.000e+00 across all five arms |
-| 2 | `factorial_s.csv` / `factorial_m.csv` | **PARTIAL** | **12 CFG_S cells complete** (3 arms x 4 seeds), pairing verified: identical `tokens_seen` per seed. CFG_M dropped by the budget solver in priority order with its arithmetic recorded |
+| 2 | `factorial_s.csv` / `factorial_m.csv` | **PARTIAL** | **24 CFG_S pilot cells complete** (3 arms x 8 seeds) at 5e7 tokens/run, pairing verified: identical `tokens_seen` per seed. Kept as `factorial_s_pilot_5e7.csv`. The primary endpoint at 399,900,672 tokens/run is running; CFG_M dropped for budget with its arithmetic recorded |
 | 3 | `paired_tests.csv` | **DONE** | Written. Primary endpoint first and labelled; Holm over the secondary family only. n=4 |
 | 4 | `reliability.csv` (A2a, blocks A2) | **DONE (as code + applied elsewhere)** | `check_resolvability` implements the protocol and the pre-registered rule. It was **applied for real** to the CRPA project's headline claim, which it caused to be withdrawn. Not yet run against a frozen model here |
 | 5 | `ladder.csv`, nine models to 6.9B | **DONE** | 5,408 head rows, nine models, Pythia-2.8B and 6.9B both present |
 | 6 | `gqa.csv`, within vs across group | **DONE** | Two real GQA models; within +0.24/+0.27, across -0.19/-0.19 |
 | 7 | `generality.csv` (A6, five methods) | **PARTIAL** | Two methods measured on frozen GPT-2: attention sinks (99.2% self-specific) and massive activations (71.7%). The spec's guidance is two minimum. The other two are recorded in `NOT_IMPLEMENTED` with reasons |
-| 8 | Figures 1-5 | **DONE** | **All five render from real data, none skipped.** Each emits png + pdf + its own source CSV |
+| 8 | Figures 1-7 | **DONE** | **All seven render from real data, none skipped.** Each emits png + pdf + its own source CSV. Figures 1 and 2 currently draw the underpowered 5e7 pilot and say so in the panel title and a footer, because the primary endpoint has not finished |
 | 9 | `checks.py` with a clean documented API | **DONE** | `check_resolvability`, `check_null`, `check_matched`. 91% covered |
-| 10 | `BUDGET.md` under $70 | **DONE** | ~$5.55 spent; the solver now enforces the $66 stop-and-report threshold that was previously declared and never checked |
+| 10 | `BUDGET.md` under $70 | **DONE** | $11.36 spent; the solver now enforces the $66 stop-and-report threshold that was previously declared and never checked |
 | 11 | 9-page draft | **BLOCKED** | Not started. This is a writing deliverable, not an engineering one |
 
 ### Day gates
@@ -49,7 +49,7 @@ Spec section 15, verbatim, with status and evidence.
 |---|---|---|
 | Day 1 | **PASS 8/8** | CPU only, $0 spent at that point |
 | Day 2 | **PASS on the measured items** | Real rate used, throughput and slowdown measured. `diagmask` slowdown 2.36x is **outside** the spec's predicted 1.5-2.0 band, which is a measurement contradicting the spec |
-| Day 3 | **PASS 5/5** | sigma_paired 0.00505, MDE 0.00518, branch `reduce`, decision written into BUDGET.md |
+| Day 3 | **PASS 5/5** | planning sigma_paired 0.00505, planning MDE 0.00518, branch `reduce`, decision written into BUDGET.md. These sized the design; the realised MDEs are 0.00139 (random) and 0.00476 (xsa) |
 | Days 4-6 | **4/5** | Pairing verified, no NaN, primary endpoint first, unpaired sd reported. Only `factorial_m` missing, which the budget solver dropped by design |
 | Day 7 | **PASS except the GPT-2 target** | Nine models present including 2.8B and 6.9B. GPT-2 does not reproduce its reference values; left failing rather than tuned |
 | Day 8 | **PASS 3/3** | GQA on real models, A6 on two methods, position-0 recorded |
@@ -93,8 +93,11 @@ self-specific fraction (56-59%) than any MHA model measured (37-52%).
 | **random** (primary) | +0.000921 | [-0.000673, +0.002515] | +0.92 | 0.426 | 4 |
 | xsa | +0.000528 | [-0.002500, +0.005420] | +0.21 | 0.848 | 4 |
 
-sigma_paired 0.00505 gives an MDE of **0.00518 nats against a target effect of
-0.00076**, so the design as run is underpowered by about sevenfold. Both
+The Day-3 **planning** sigma of 0.00505 forecast an MDE of 0.00518 nats. That
+figure sized the design and is not a result: the completed 8-seed pilot's
+realised MDEs are **0.00139** for the primary `random` arm and **0.00476** for
+`xsa`, against a target effect of **0.00076**, so the arm that matters for the
+method is underpowered by about **6x** rather than sevenfold. Both
 intervals span zero and each other: **Check 2 returns "cannot tell" at this
 power**, which is the honest outcome and is not evidence that xsa and random
 are equivalent. The binding constraint is tokens per run, not seeds, which is
