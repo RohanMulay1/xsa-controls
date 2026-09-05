@@ -230,15 +230,21 @@ evaluation documents per half. `n = 3 models, 144 to 384 heads each.`
 
 | model | statistic | raw rho | r_delta | ceiling | disattenuated |
 |---|---|---|---|---|---|
-| gpt2 | cos_self | **+0.469** | +0.799 | 0.892 | **+0.526** |
-| gpt2 | excess | +0.236 | +0.799 | 0.892 | +0.264 |
-| pythia-160m | cos_self | **+0.014** | +0.473 | 0.686 | +0.020 |
-| pythia-160m | excess | +0.487 | +0.473 | 0.686 | **+0.710** |
-| pythia-410m | cos_self | **+0.099** | +0.435 | 0.657 | +0.150 |
-| pythia-410m | excess | +0.216 | +0.435 | 0.657 | **+0.328** |
+| gpt2 | cos_self | **+0.462** | +0.795 | 0.890 | **+0.519** |
+| gpt2 | excess | +0.279 | +0.795 | 0.891 | +0.313 |
+| pythia-160m | cos_self | +0.149 | +0.419 | 0.645 | +0.231 |
+| pythia-160m | excess | +0.189 | +0.419 | 0.646 | +0.292 |
+| pythia-410m | cos_self | **-0.025** | +0.531 | 0.726 | -0.034 |
+| pythia-410m | excess | +0.249 | +0.531 | 0.727 | **+0.342** |
+
+Each statistic is disattenuated by **its own** split-half reliability, not by
+the effect statistic's, and both halves of the statistic are pooled to match
+the pooled effect. An earlier revision did neither, and the difference was
+not cosmetic: pythia-160m's `excess` correlation fell from +0.487 to +0.189
+once the statistic was paired symmetrically against the effect.
 
 The effect is resolvable, which is the first thing worth saying: `r_delta` is
-+0.799 in GPT-2 (reliable) and +0.473 and +0.435 in the two Pythia models
++0.795 in GPT-2 (reliable) and +0.419 and +0.531 in the two Pythia models
 (attenuated). Rank agreement rises monotonically with evaluation budget, so
 the attenuation is a sample-size limit rather than a property of the effect.
 
@@ -258,23 +264,27 @@ disagreement is more informative than either run alone. It is Check 0 doing
 its job on our own work: an unreliable effect produced a correlation that did
 not survive being measured again.
 
-In both Pythia models the raw self-value cosine -- the quantity the method is
-motivated by -- carries essentially no information about the measured effect
-of removing it: rho = +0.014 and +0.099. The null-corrected excess predicts it
-better in both, +0.487 and +0.216 raw, +0.710 and +0.328 after correcting for
-the ceiling. That is the case for Check 1 stated as a prediction rather than
+The three models do not agree, and the disagreement is the result.
+
+In **pythia-410m** the raw self-value cosine -- the quantity the method is
+motivated by -- carries nothing at all about the measured effect of removing
+it (rho = -0.025), while the null-corrected excess carries some (+0.249, or
++0.342 against its ceiling). In **pythia-160m** the two are close and both
+weak (+0.149 against +0.189): that model supports no ordering either way, and
+we do not read one into it. That is the case for Check 1 stated as a prediction rather than
 as a critique: correcting for the matched null does not merely lower a number,
 it recovers a statistic that tracks the intervention.
 
-**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.469) and the
-excess much less so (+0.236).
+**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.462) and the
+excess much less so (+0.279).
 
 The GPT-2 number is the one to trust most. Its disattenuated value is
 **+0.521, +0.527 and +0.526** across three independent runs, at two
 evaluation budgets, on two different GPUs, under two different PyTorch and
-transformers versions. The raw correlation moved over that range (+0.450 to
-+0.469) while the disattenuated one did not, because disattenuation divides
-out precisely the reliability that moved. That is the clearest evidence we
+transformers versions, and two revisions of the analysis. The raw
+correlation moved over that range (+0.416 to +0.469) while the disattenuated
+one did not: **+0.521, +0.527, +0.526, +0.519**. Disattenuation divides out
+precisely the reliability that moved. That is the clearest evidence we
 have that the correction is doing what it claims. We report this rather than averaging over it.
 
 ### 5.1 The prior values for this correlation are not usable
@@ -283,7 +293,7 @@ The specification we worked from quotes prior GPT-2 values for exactly this
 correlation: **Spearman 0.043 / 0.017 / -0.021** for `cos_self`, `excess` and
 `a_ii`. Taken at face value they say the motivating statistic is unrelated to
 where the intervention helps, and that any larger number is suspect. Our
-+0.469 on GPT-2 is an order of magnitude above the first of them, so the
++0.462 on GPT-2 is an order of magnitude above the first of them, so the
 discrepancy has to be addressed rather than left for a reader to find.
 
 Those values were measured on `SAMPLE_TEXT * 200`: one paragraph repeated two
@@ -298,11 +308,11 @@ zero. Near-zero on that input is a property of the input.
 
 Measured on 64 real wikitext-103 documents per half, with disjoint halves and
 the reliability of the effect established first, the same correlation is
-+0.469 on GPT-2 with a ceiling of 0.892, and it held at +0.450 and +0.416 in
-two independent runs at a smaller budget. The prior figures are superseded,
-not contradicted: they are not measurements of the quantity they appear to
-describe. `DEVIATIONS.md` D8 records this. Two
-models agreeing and a third disagreeing is not a general law about statistics,
++0.462 on GPT-2 with a ceiling of 0.890, and it held between +0.416 and
++0.469 across four independent runs. The prior figures are superseded, not
+contradicted: they are not measurements of the quantity they appear to
+describe. `DEVIATIONS.md` D8 records this. One model
+disagreeing with another is not a general law about statistics,
 and the honest summary is narrower than the one we would have liked to write:
 whether the raw statistic predicts its own intervention is model-dependent,
 and a method that assumes it does is assuming something that is false in two

@@ -233,20 +233,21 @@ produces, not a property of the method.
 
 | model | `cos_self` rho | `excess` rho | verdict |
 |---|---|---|---|
-| gpt2 | **+0.469** | +0.236 | reliable |
-| pythia-160m | +0.014 | **+0.487** | attenuated |
-| pythia-410m | +0.099 | **+0.216** | attenuated |
+| gpt2 | **+0.462** | +0.279 | reliable |
+| pythia-160m | +0.149 | +0.189 | attenuated |
+| pythia-410m | -0.025 | **+0.249** | attenuated |
 
-On GPT-2 the raw statistic correlates at **+0.469**, an order of magnitude
+On GPT-2 the raw statistic correlates at **+0.462**, an order of magnitude
 above the quoted 0.043, and the relationship is real rather than noise: the
-split-half reliability of the effect is +0.799, so the ceiling on any
-observable correlation is 0.892 and +0.469 sits well inside it. Two further
-runs at a smaller evaluation budget put it at +0.450 and +0.416, so the
-tenfold gap against the prior figure is not a one-run artifact.
+split-half reliability of the effect is +0.795, so the ceiling on any
+observable correlation is 0.890 and +0.462 sits well inside it. Four runs
+across two evaluation budgets, two GPUs and two analysis revisions put it
+between +0.416 and +0.469, so the tenfold gap against the prior figure is not
+a one-run artifact.
 
 **The ordering also reverses across models,** which no single prior number
 could have expressed. On both Pythia models the raw statistic carries
-essentially nothing (+0.014, +0.099) while the null-corrected excess carries
+essentially nothing (+0.149, -0.025) while the null-corrected excess carries
 most of it; on GPT-2 the reverse. We report the disagreement rather than the
 average, and the claim we make is correspondingly narrow: whether a raw
 statistic predicts its own intervention is model-dependent.

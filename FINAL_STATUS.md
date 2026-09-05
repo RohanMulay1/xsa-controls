@@ -78,16 +78,17 @@ correlation, and that project withdrew its headline claim.
 
 **6. The statistic does not predict its own intervention, in two models of
 three.** Measured at 64 evaluation documents per half. A2a first: the
-per-head XSA effect is resolvable, split-half `r_delta` +0.799 in GPT-2
-(reliable) and +0.473 and +0.435 in the two Pythia sizes (attenuated),
+per-head XSA effect is resolvable, split-half `r_delta` +0.795 in GPT-2
+(reliable) and +0.419 and +0.531 in the two Pythia sizes (attenuated),
 against `r_stat` above +0.99 everywhere.
 
-Then A2. In both Pythia models the raw self-value cosine carries essentially
-no information about the measured effect of removing it, rho +0.014 and
-+0.099, while the null-corrected excess predicts it better, +0.487 and +0.216
-raw and +0.710 and +0.328 disattenuated. **In GPT-2 the ordering reverses**,
-+0.469 against +0.236. Reported, not averaged away: the claim is that whether
-a raw statistic predicts its own intervention is model-dependent.
+Then A2, and the three models disagree. In **GPT-2** the raw cosine predicts
+(+0.462) and the excess much less (+0.279). In **pythia-410m** the ordering
+reverses completely: the raw cosine carries nothing (-0.025) and the excess
+carries some (+0.249). **pythia-160m supports no ordering**, both being close
+and weak (+0.149 against +0.189). Reported, not averaged away: the claim is
+that whether a raw statistic predicts its own intervention is
+model-dependent, evidenced by one model each way and one abstaining.
 
 **6a. The first version of that result did not reproduce, and the second one
 is why the budget is 64 documents.** Run at 24 documents per half on a
@@ -96,9 +97,9 @@ to +0.194 and **-0.007**: attenuated became unresolvable and the correlations
 followed. At 64 they are stable and the pattern returns. Both 24-document
 runs are kept in `results/a2_budget_comparison/`.
 
-GPT-2's disattenuated value is **+0.521, +0.527, +0.526** across all three
-runs, two budgets, two GPUs and two library versions, while its raw
-correlation moved from +0.450 to +0.469. Disattenuation divides out exactly
+GPT-2's disattenuated value is **+0.521, +0.527, +0.526, +0.519** across four
+runs, two budgets, two GPUs, two library versions and two analysis revisions,
+while its raw correlation moved between +0.416 and +0.469. Disattenuation divides out exactly
 the reliability that moved. That is the best evidence in this repository that
 the correction does what it claims, and it came from a failed reproduction.
 

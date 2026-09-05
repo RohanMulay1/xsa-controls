@@ -259,28 +259,30 @@ CLAIMS = [
      2.3364, "x", "calibration.json", "calibrate_cli.py",
      diagmask_slowdown("M")),
     ("the per-head XSA effect is resolvable in GPT-2 (split-half r_delta)",
-     0.799, "", "reliability.csv", "run_reliability.py",
+     0.795, "", "reliability.csv", "run_reliability.py",
      reliability_field("gpt2", "r_delta")),
-    ("in Pythia-160m the raw self-value cosine carries essentially no "
-     "information about the measured per-head effect",
-     0.014, "", "a2_correlations.csv", "run_reliability.py",
+    ("in Pythia-160m the raw cosine and the null-corrected excess are "
+     "close, so the model gives no clear ordering",
+     0.149, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-160m", "cos_self", "rho_raw")),
     ("in Pythia-160m the null-corrected excess does predict it",
-     0.487, "", "a2_correlations.csv", "run_reliability.py",
+     0.189, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-160m", "excess", "rho_raw")),
-    ("in Pythia-410m the raw self-value cosine again carries almost nothing",
-     0.099, "", "a2_correlations.csv", "run_reliability.py",
+    ("in Pythia-410m the raw self-value cosine carries nothing about the "
+     "measured effect",
+     -0.025, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-410m", "cos_self", "rho_raw")),
     ("in Pythia-410m the null-corrected excess again predicts",
-     0.216, "", "a2_correlations.csv", "run_reliability.py",
+     0.249, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-410m", "excess", "rho_raw")),
     ("in GPT-2 the ordering reverses: the raw cosine predicts better than "
      "the excess, which is reported rather than averaged away",
-     0.469, "", "a2_correlations.csv", "run_reliability.py",
+     0.462, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("gpt2", "cos_self", "rho_raw")),
-    ("the disattenuated GPT-2 correlation is stable across three independent "
-     "runs at two evaluation budgets on two GPUs (0.521, 0.527, 0.526)",
-     0.526, "", "a2_correlations.csv", "run_reliability.py",
+    ("the disattenuated GPT-2 correlation is stable across four independent "
+     "runs, two budgets, two GPUs and two analysis revisions "
+     "(0.521, 0.527, 0.526, 0.519)",
+     0.519, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("gpt2", "cos_self", "rho_disattenuated")),
 ]
 
