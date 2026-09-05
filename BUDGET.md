@@ -8,9 +8,14 @@ Ceiling **$70.00**. Stop and report if projected spend exceeds **$66.00**.
 |---|---|---|---|---|
 | 2026-09-03 | Day 1: scaffold, 5 arms, 10/10 self-tests, A4 recompute, Track A on CPU | 0.00 | $0.00 | $70.00 |
 | 2026-09-03 | Calibration, data prep, A1 nine-model ladder, A3 GQA, pilot, CFG_S factorial (12 of 24 cells) | ~7.5 | **~$5.55** | **~$64.45** |
-| 2026-09-04 | A3 second GQA family (TinyLlama), A2a + A2 on GPT-2 and two Pythia sizes, precision check | ~2.6 | **~$3.60** | **~$60.85** |
+| 2026-09-04/05 | A3 second GQA family (TinyLlama), A2a + A2 on GPT-2 and two Pythia sizes, precision check, and the sibling CRPA project's long-context work | 4.18 | **$5.81** | **$58.64** |
 
-**Total spent to date: approximately $9.15.** The first block ran on an RTX
+**Total spent to date: $11.36.** The A100 figure is the pod's full billed
+uptime, 4.18 hours at $1.39/hr, not an estimate of the share attributable to
+this repository: the card was shared with the sibling CRPA project's
+long-context runs and splitting a single rented pod between two projects
+would be arithmetic invented after the fact. Charging the whole of it here
+overstates this project's cost rather than understating it. The first block ran on an RTX
 6000 Ada at $0.74/hr community; the second on an A100-SXM4-80GB at $1.39/hr,
 shared with the sibling CRPA project's long-context work. Projected spend
 never approached the $66 stop-and-report threshold, which is now enforced in
