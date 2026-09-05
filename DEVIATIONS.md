@@ -202,3 +202,58 @@ the capture is reused. `layers_per_pass` bounds memory for large models by
 re-running per chunk, which is the spec's own guidance: batch the capture,
 never shrink T, because shrinking T changes the statistic being measured (see
 D4).
+
+## D8. The spec's prior A2 correlations came from degenerate input.
+
+**Status: prior values superseded by measurement on real prose.**
+
+Section 10/A2 quotes prior GPT-2 values for the correlation between the
+motivating statistic and the measured per-head intervention effect:
+**Spearman 0.043 / 0.017 / -0.021** for `cos_self` / `excess` / `a_ii`. Read
+as a target, those numbers say the statistic is essentially unrelated to
+where the intervention helps, on every statistic, and that a measurement
+returning anything larger is suspect.
+
+They are not a usable reference. The spec's own section 17 lists four bugs in
+the `overlap-vs-contribution` code they came from, and the second is decisive
+here:
+
+> **Degenerate input.** Everything runs on `SAMPLE_TEXT * 200` -- one
+> paragraph x200, base loss 0.76 nats vs 3.96 for real prose. Fix: >= 50 real
+> documents.
+
+A correlation across heads needs variation across heads to correlate. One
+paragraph repeated two hundred times gives a model almost nothing to do
+differently in different heads: at 0.76 nats it is close to memorising a
+short cycle. Near-zero correlations on that input are what the input
+produces, not a property of the method.
+
+**Measured here, on real wikitext-103 documents** (`results/a2_correlations.csv`,
+64 documents per half, disjoint halves, 144 to 384 heads per model):
+
+| model | `cos_self` rho | `excess` rho | verdict |
+|---|---|---|---|
+| gpt2 | **+0.469** | +0.236 | reliable |
+| pythia-160m | +0.014 | **+0.487** | attenuated |
+| pythia-410m | +0.099 | **+0.216** | attenuated |
+
+On GPT-2 the raw statistic correlates at **+0.469**, an order of magnitude
+above the quoted 0.043, and the relationship is real rather than noise: the
+split-half reliability of the effect is +0.799, so the ceiling on any
+observable correlation is 0.892 and +0.469 sits well inside it. Two further
+runs at a smaller evaluation budget put it at +0.450 and +0.416, so the
+tenfold gap against the prior figure is not a one-run artifact.
+
+**The ordering also reverses across models,** which no single prior number
+could have expressed. On both Pythia models the raw statistic carries
+essentially nothing (+0.001, +0.039) while the null-corrected excess carries
+most of it; on GPT-2 the reverse. We report the disagreement rather than the
+average, and the claim we make is correspondingly narrow: whether a raw
+statistic predicts its own intervention is model-dependent.
+
+**Why this deviation is recorded rather than silently corrected.** A reader
+comparing this repository against the spec will find a tenfold discrepancy on
+the number the whole of A2 turns on. Without this entry the obvious
+conclusion is that our measurement is wrong. The prior value is not a
+measurement of the quantity it appears to describe, and the fix is the one
+the spec itself prescribes: real documents.

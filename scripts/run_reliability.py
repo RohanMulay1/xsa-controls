@@ -94,7 +94,8 @@ def head_stats(probe, ids, layers, seed=0):
     return {(int(r["layer"]), int(r["head"])): r for r in rows}
 
 
-def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
+def run_model(model_id, n_docs, block, device, dtype, layers_arg,
+              seed=0, seq_len=None):
     print("\n=== {} ===".format(model_id))
     probe = FrozenProbe.from_pretrained(model_id, device=device, dtype=dtype)
     nq, nkv = probe.head_counts()
@@ -114,10 +115,24 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
     # padding would put the intervention on positions that carry no signal
     # and dilute every per-head delta by an amount that varies with the
     # document mix.
-    common = min(b.shape[1] for b in batches)
-    batches = [b[:, :common] for b in batches]
-    print("  {} documents truncated to a common {} tokens".format(
-        sum(b.shape[0] for b in batches), common))
+    # Truncate to a FIXED length, not to the shortest document present.
+    # Taking the minimum makes the sequence length a function of how many
+    # documents were loaded: at 24 documents per half it came out at 142
+    # tokens and at 64 it fell to 137, so raising the evidence also changed
+    # the quantity being measured. This repository's own D4 records that
+    # Check 1 is strongly length-dependent, so that drift is not harmless.
+    # Documents shorter than the target are dropped rather than padded.
+    target = seq_len or min(b.shape[1] for b in batches)
+    usable = [b[:, :target] for b in batches if b.shape[1] >= target]
+    if len(usable) < 4:
+        raise RuntimeError(
+            "only {} of {} documents reach {} tokens; lower --seq-len or "
+            "raise --n-docs".format(len(usable), len(batches), target))
+    dropped = len(batches) - len(usable)
+    batches = usable
+    common = target
+    print("  {} documents at a fixed {} tokens ({} too short, dropped)".format(
+        sum(b.shape[0] for b in batches), common, dropped))
     all_ids = torch.cat(batches, dim=0).to(probe.device)
     if all_ids.shape[0] < 4:
         raise SystemExit("need at least 4 documents to split into halves")
@@ -191,6 +206,19 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
 
     # A2: correlate the pooled effect against each motivating statistic.
     pooled = [0.5 * (da[k] + db[k]) for k in keys]
+
+    # Per-head rows, so the correlation can be looked at rather than only
+    # summarised. A single rho hides whether a relationship is driven by a
+    # handful of heads, and the scatter is the figure that shows it.
+    per_head = []
+    for k, dpool in zip(keys, pooled):
+        row = {"model": model_id, "layer": k[0], "head": k[1],
+               "delta_half_a": da[k], "delta_half_b": db[k],
+               "delta_pooled": dpool}
+        for stat_name in ("cos_self", "cos_null", "excess", "a_ii"):
+            if stat_name in sa[k]:
+                row[stat_name] = float(sa[k][stat_name])
+        per_head.append(row)
     corr_rows = []
     for stat_name in ("cos_self", "excess", "a_ii"):
         if stat_name not in sa[keys[0]]:
@@ -214,7 +242,7 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
 
     rel_row = {
         "model": model_id, "n_heads": len(keys), "docs_per_half": half,
-        "block": block, "r_delta": res.r_delta, "r_stat": res.r_stat,
+        "block": block, "seq_len": common, "r_delta": res.r_delta, "r_stat": res.r_stat,
         "ceiling": ceiling, "verdict": res.verdict,
         "resolvable": bool(res.passed), "action": res.action,
         "baseline_loss_half_a": base_a, "baseline_loss_half_b": base_b,
@@ -223,7 +251,7 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
         "gate_max_rel_error": max(m["max_rel_error"] for m in gate.values()),
         "status": "completed",
     }
-    return rel_row, corr_rows, sweep
+    return rel_row, corr_rows, sweep, per_head
 
 
 def main(argv=None):
@@ -238,17 +266,35 @@ def main(argv=None):
     ap.add_argument("--dtype", default="float32")
     ap.add_argument("--layers", nargs="*", type=int, default=None)
     ap.add_argument("--seed", type=int, default=0)
+    # A smoke run on a tiny model writes the same filenames as a real one.
+    # Without somewhere else to put them it silently overwrites committed
+    # measurements with two-head toy numbers, which is a data-loss bug, not
+    # an inconvenience.
+    ap.add_argument("--seq-len", type=int, default=128,
+                    help="fixed token length every document is truncated to. "
+                         "Fixed on purpose: taking the shortest document "
+                         "present makes the sequence length depend on how "
+                         "many documents were loaded, and Check 1 is "
+                         "length-dependent.")
+    ap.add_argument("--results-dir", default=None,
+                    help="write outputs here instead of results/. Use it for "
+                         "smoke runs so they cannot overwrite real results.")
     args = ap.parse_args(argv)
 
-    rel_rows, corr_rows, sweeps = [], [], []
+    global RESULTS
+    if args.results_dir:
+        RESULTS = Path(args.results_dir)
+
+    rel_rows, corr_rows, sweeps, head_rows = [], [], [], []
     for model_id in args.models:
         try:
-            r, c, s = run_model(model_id, args.n_docs, args.block,
-                                args.device, args.dtype, args.layers,
-                                args.seed)
+            r, c, s, ph = run_model(model_id, args.n_docs, args.block,
+                                    args.device, args.dtype, args.layers,
+                                    args.seed, args.seq_len)
             rel_rows.append(r)
             corr_rows.extend(c)
             sweeps.extend(s)
+            head_rows.extend(ph)
         except Exception as exc:
             print("  FAILED {}: {}: {}".format(
                 model_id, type(exc).__name__, str(exc)[:300]))
@@ -258,13 +304,17 @@ def main(argv=None):
     RESULTS.mkdir(exist_ok=True)
     if rel_rows:
         write_csv(rel_rows, RESULTS / "reliability.csv")
-        print("\nwrote results/reliability.csv")
+        print("\nwrote {}".format(RESULTS / "reliability.csv"))
     if corr_rows:
         write_csv(corr_rows, RESULTS / "a2_correlations.csv")
-        print("wrote results/a2_correlations.csv")
+        print("wrote {}".format(RESULTS / "a2_correlations.csv"))
     if sweeps:
         write_csv(sweeps, RESULTS / "reliability_budget_sweep.csv")
-        print("wrote results/reliability_budget_sweep.csv")
+        print("wrote {}".format(RESULTS / "reliability_budget_sweep.csv"))
+    if head_rows:
+        write_csv(head_rows, RESULTS / "a2_per_head.csv")
+        print("wrote {} ({} heads)".format(
+            RESULTS / "a2_per_head.csv", len(head_rows)))
     (RESULTS / "reliability.json").write_text(
         json.dumps({"reliability": rel_rows, "correlations": corr_rows,
                     "budget_sweep": sweeps}, indent=2, default=str),

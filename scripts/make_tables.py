@@ -187,8 +187,13 @@ def table3_generality():
 
 
 def table4_paired():
+    # Order is priority: the primary endpoint first, the underpowered
+    # pilot only if no primary exists. The pilot's filename carries its
+    # budget so a reader cannot mistake one for the other.
     for name, label in (("paired_tests_m.csv", "CFG\\_M"),
-                        ("paired_tests_s.csv", "CFG\\_S")):
+                        ("paired_tests_s.csv", "CFG\\_S"),
+                        ("paired_tests_s_pilot_5e7.csv",
+                         "CFG\\_S, underpowered pilot")):
         rows = read(name)
         if not rows:
             continue
@@ -200,7 +205,7 @@ def table4_paired():
         pilot = " This is the underpowered pilot at 5e7 tokens per run, " \
                 "outside the pre-registered [3.5e8, 6e8] band; it is " \
                 "reported as provenance, not as the primary endpoint." \
-                if name.endswith("_s.csv") else ""
+                if "pilot" in name else ""
         emit("T4",
              "Paired difference in final validation loss against baseline, "
              "{}. The primary endpoint is listed first; Holm correction is "

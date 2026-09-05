@@ -21,14 +21,59 @@ shared with the sibling CRPA project's long-context work. Projected spend
 never approached the $66 stop-and-report threshold, which is now enforced in
 `solve_token_budget` rather than merely declared.
 
-## The primary endpoint is still not registered, and not run
+## The primary endpoint, registered 2026-09-05
 
-The spec's primary endpoint is the CFG_M factorial at a budget inside
-[3.5e8, 6e8] tokens per run. **It has not been run and is not re-registered
-here.** Registering a pre-registered endpoint that no one intends to run
-before the paper is written would be worse than leaving it open.
+**Registered before the run, not after.** CFG_S, arms baseline / xsa / random,
+seeds 42 1337 2024 7 99 512 8191 31337, **399,900,672 tokens per run**. The
+budget is inside the pre-registered [3.5e8, 6e8] band and is a multiple of
+`batch_tokens` (131,072 x 3,051), so every arm sees an identical budget. The
+pre-registered primary endpoint remains `random` against `baseline`; Holm
+correction applies over the secondary arms only.
 
-What exists instead is `factorial_s.csv`: 24 cells at 5e7 tokens per run,
+### Why $24 was the wrong projection, and what the right one is
+
+The committed `calibration.json` projects **$24.01** for 24 runs at
+349,962,240 tokens, which scaled to 399,900,672 would be about $27.44 and
+would breach a $20 ceiling. That figure is not wrong so much as answering a
+different question: it is solved from **diagmask's** throughput, 71,918 tok/s,
+because diagmask is the slowest of the five arms and the solver sizes the
+whole design against its worst case.
+
+**Diagmask is not in this run.** The three arms here were measured directly on
+the card that will run them, an RTX 6000 Ada at $0.74/hr:
+
+| arm | tokens/sec | hours for 8 runs at 3.999e8 tokens |
+|---|---|---|
+| baseline | 176,467 | 5.04 |
+| xsa | 159,358 | 5.58 |
+| random | 166,267 | 5.35 |
+| **total** | | **15.96 GPU-hours** |
+
+**15.96 h x $0.74/hr = $11.81**, against a $20 ceiling. The run proceeds.
+
+Substituting the slowest arm's throughput for arms that are twice as fast
+would have blocked a run that fits inside the ceiling with $8 to spare. The
+lesson is the same one the rest of this repository keeps arriving at: the
+number has to be measured on the thing being asked about.
+
+### CFG_M is dropped for budget, with the arithmetic
+
+The CFG_M scale check is **not run and not attempted**. At CFG_M the measured
+`diagmask_slowdown` is 2.336 and the committed calibration projects **$51.57**
+for the same 24 runs at 349,962,240 tokens; at 399,900,672 that is about
+$58.94. Even taking the same correction as above and assuming CFG_M's three
+arms run at CFG_S's ratio to diagmask, the floor is well beyond $20.
+
+Dropping it is the spec's own pre-registered priority order:
+`cuts_applied: ["cfg_m_scale_check", "secondary_arms"]`. It is recorded here
+as **dropped for budget**, which is its sanctioned status, not as an oversight.
+
+## The old 5e7 factorial, kept as the underpowered pilot
+
+`factorial_s_pilot_5e7.csv` and `paired_tests_s_pilot_5e7.csv`, with their 24
+run records under `results/factorial_s_pilot_5e7/runs/`.
+
+It is 24 cells at 5e7 tokens per run,
 outside the band, produced when `calibrate_cli.py` was invoked with
 `--cost-ceiling 3.00` against a spec figure of $56. The solver recorded
 `affordable: false` and the run proceeded anyway. It is kept, relabelled as
@@ -36,9 +81,10 @@ the underpowered pilot, because it is honest provenance and it is what the
 power analysis is computed from. It is not the primary endpoint and no table
 presents it as one.
 
-Running it properly costs about $38 at 24 runs x 2.13 h x $0.74/hr, roughly
-51 GPU-hours unattended, and about $60.85 of the ceiling remains. The
-blocker is elapsed time, not money.
+It is superseded by the registered run above, at 399,900,672 tokens per run
+and a measured $11.81. The $38 figure previously quoted here came from the
+same diagmask-throughput substitution described above and was about three
+times the real cost.
 
 Two guards now make the original failure impossible to repeat:
 `--cost-ceiling` is required with no default, and `run_factorial.py` refuses

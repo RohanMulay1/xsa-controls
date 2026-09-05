@@ -29,6 +29,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
+from .stats import minimum_detectable_effect  # noqa: E402
+
 #: Colour-vision-safe categorical slots. Never red/green as the only contrast.
 #: Chosen for relative luminance, not only for hue. The previous palette put
 #: baseline (#4d4d4d) and diagmask (#4a3aa7) 0.001 apart in luminance: two
@@ -363,10 +365,171 @@ def fig5_gqa(results: Path, out_dir: Path) -> List[Path]:
     return _save(fig, out_dir, "fig5_gqa", rows)
 
 
+# ---------------------------------------------------------------------------
+# Figure 6 - A2: does the motivating statistic predict its own intervention?
+# ---------------------------------------------------------------------------
+
+def fig6_a2_scatter(results: Path, out_dir: Path) -> List[Path]:
+    """Per-head statistic against the measured effect of removing it.
+
+    A single rho hides whether a relationship is carried by a handful of
+    heads or spread across all of them, and it hides the ceiling that
+    split-half unreliability puts on how large that rho could possibly be.
+    Both are annotated on each panel.
+    """
+    heads = read_csv(Path(results) / "a2_per_head.csv")
+    corr = read_csv(Path(results) / "a2_correlations.csv")
+    if not heads:
+        raise FigureSkipped(
+            "missing a2_per_head.csv. Run: python scripts/run_reliability.py")
+    if not corr:
+        raise FigureSkipped("missing a2_correlations.csv")
+
+    models: List[str] = []
+    for r in heads:
+        if r["model"] not in models:
+            models.append(r["model"])
+
+    stats = {}
+    for r in corr:
+        stats[(r["model"], r["statistic"])] = r
+
+    fig, axes = plt.subplots(1, len(models), figsize=(4.8 * len(models), 4.2),
+                             squeeze=False)
+    fig.subplots_adjust(wspace=0.32)
+    rows_out = []
+    for panel, (ax, model) in enumerate(zip(axes[0], models)):
+        mine = [r for r in heads if r["model"] == model]
+        x = [_num(r["cos_self"]) for r in mine]
+        y = [_num(r["delta_pooled"]) for r in mine]
+        ax.axhline(0.0, color=INK_SECONDARY, linewidth=1, zorder=1)
+        ax.scatter(x, y, s=18, facecolor=SERIES["xsa"], edgecolor=SURFACE,
+                   linewidth=0.4, alpha=0.85, zorder=3)
+        # Least-squares line, drawn only to guide the eye. The reported
+        # statistic is Spearman, which this line does not represent.
+        if len(x) >= 3 and np.std(x) > 0:
+            b, a = np.polyfit(np.asarray(x), np.asarray(y), 1)
+            xs = np.linspace(min(x), max(x), 32)
+            ax.plot(xs, b * xs + a, color=SERIES["random"], linewidth=1.4,
+                    linestyle="--", zorder=4)
+        c = stats.get((model, "cos_self"), {})
+        note = "\n".join([
+            "raw rho        {:+.3f}".format(_num(c.get("rho_raw"))),
+            "disattenuated  {:+.3f}".format(_num(c.get("rho_disattenuated"))),
+            "r_delta        {:+.3f}".format(_num(c.get("r_delta"))),
+            "ceiling         {:.3f}".format(_num(c.get("ceiling"))),
+            "n heads          {}".format(len(mine)),
+        ])
+        # Boxed, so it stays readable where it sits over the point cloud.
+        ax.annotate(note, xy=(0.03, 0.97), xycoords="axes fraction",
+                    va="top", ha="left", fontsize=7.6, family="monospace",
+                    color=INK_SECONDARY,
+                    bbox=dict(boxstyle="round,pad=0.35", facecolor=SURFACE,
+                              edgecolor=GRID, linewidth=0.7, alpha=0.92))
+        # Only the leftmost panel carries the y label: repeating it puts text
+        # from one panel directly against the next panel's data.
+        ylabel = ("delta loss when the head's self-value is removed (nats)"
+                  if panel == 0 else "")
+        _style(ax, "cos(y_i, v_i) per head (dimensionless)", ylabel,
+               model.split("/")[-1])
+        rows_out.extend(mine)
+
+    fig.suptitle("Figure 6  A2: motivating statistic vs measured effect",
+                 fontsize=11, y=1.02)
+    return _save(fig, out_dir, "fig6_a2_scatter", rows_out)
+
+
+# ---------------------------------------------------------------------------
+# Figure 7 - power: what the design could have resolved
+# ---------------------------------------------------------------------------
+
+#: The effect size XSA's own independent replication (PR #264) reports.
+PR264_REFERENCE = -0.00076
+
+
+def fig7_power(results: Path, out_dir: Path) -> List[Path]:
+    """Minimum detectable effect against seed count, one curve per budget.
+
+    Turns the power limitation into a quantity rather than an apology: it
+    says how many seeds each token budget would have needed before the
+    reported effect came within reach.
+    """
+    curves = []
+    for path in sorted(Path(results).glob("paired_tests_*.csv")):
+        if "smoke" in path.name:
+            continue
+        rows = [r for r in read_csv(path) if r.get("sd_paired")]
+        if not rows:
+            continue
+        primary = [r for r in rows if r.get("arm") == "random"] or rows
+        sigma = _num(primary[0]["sd_paired"])
+        # The paired-test file records the test, not the budget it was run
+        # at. Read the budget from the factorial rows that produced it, and
+        # use tokens_seen rather than a configured figure: what a curve is
+        # labelled with should be what the runs actually consumed.
+        tokens = _num(primary[0].get("tokens_per_run"))
+        if not np.isfinite(tokens) or not tokens:
+            sibling = path.parent / path.name.replace("paired_tests_",
+                                                      "factorial_")
+            seen = {_num(r.get("tokens_seen"))
+                    for r in read_csv(sibling)} if sibling.exists() else set()
+            seen = {v for v in seen if np.isfinite(v) and v}
+            # Only label a budget the whole file agrees on. Mixed budgets are
+            # exactly what the homogeneity guard exists to catch.
+            tokens = seen.pop() if len(seen) == 1 else float("nan")
+        if not np.isfinite(sigma) or sigma <= 0:
+            continue
+        curves.append((path.name, sigma, tokens,
+                       int(_num(primary[0].get("n_seeds", 0)))))
+    if not curves:
+        raise FigureSkipped(
+            "no paired_tests_*.csv with a paired sd. Run the factorial.")
+
+    seeds = np.arange(2, 65)
+    fig, ax = plt.subplots(figsize=(6.6, 4.2))
+    rows_out = []
+    for i, (name, sigma, tokens, n_used) in enumerate(sorted(
+            curves, key=lambda c: c[1])):
+        mde = [minimum_detectable_effect(sigma, int(n)) for n in seeds]
+        label = ("{:.3g} tokens/run".format(tokens) if np.isfinite(tokens)
+                 and tokens else name)
+        arm = ("xsa", "random", "meanval", "diagmask", "baseline")[i % 5]
+        ax.plot(seeds, mde, color=SERIES[arm], linewidth=1.8,
+                linestyle=LINESTYLES[arm], label=label, zorder=3)
+        if n_used:
+            ax.plot([n_used], [minimum_detectable_effect(sigma, n_used)],
+                    marker=MARKERS[arm], color=SERIES[arm], markersize=8,
+                    markeredgecolor=SURFACE, zorder=5)
+        for n in seeds:
+            rows_out.append({"source": name, "tokens_per_run": tokens,
+                             "sd_paired": sigma, "n_seeds": int(n),
+                             "mde_nats": minimum_detectable_effect(sigma,
+                                                                   int(n))})
+
+    ax.axhline(abs(PR264_REFERENCE), color=INK, linewidth=1.3,
+               linestyle=(0, (5, 3)), zorder=4,
+               label="effect PR #264 reports ({:.5f})".format(
+                   abs(PR264_REFERENCE)))
+    ax.set_yscale("log")
+    ax.set_xscale("log", base=2)
+    ax.set_xticks([2, 4, 8, 16, 32, 64])
+    ax.set_xticklabels(["2", "4", "8", "16", "32", "64"])
+    ax.minorticks_off()
+    _style(ax, "seeds per arm", "minimum detectable effect (nats)",
+           "Figure 7  Power: MDE vs seeds, by token budget")
+    ax.legend(frameon=False, fontsize=8.2, loc="upper right")
+    ax.annotate("markers show the seed count actually run",
+                xy=(0.02, 0.04), xycoords="axes fraction", fontsize=8,
+                color=INK_SECONDARY)
+    return _save(fig, out_dir, "fig7_power", rows_out)
+
+
 ALL_FIGURES = {
     "fig1_gates": fig1_gates,
     "fig2_paired_delta": fig2_paired_delta,
     "fig3_ladder": fig3_ladder,
     "fig4_generality": fig4_generality,
     "fig5_gqa": fig5_gqa,
+    "fig6_a2_scatter": fig6_a2_scatter,
+    "fig7_power": fig7_power,
 }

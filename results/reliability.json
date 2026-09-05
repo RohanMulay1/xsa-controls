@@ -3,52 +3,52 @@
     {
       "model": "gpt2",
       "n_heads": 144,
-      "docs_per_half": 24,
+      "docs_per_half": 64,
       "block": 512,
-      "r_delta": 0.7519760790696657,
-      "r_stat": 0.9925729442970823,
-      "ceiling": 0.8639392981240949,
+      "r_delta": 0.7989671248291937,
+      "r_stat": 0.9964753637167431,
+      "ceiling": 0.8922729718600084,
       "verdict": "reliable",
       "resolvable": true,
       "action": "Delta is reliable. Report rho and rho_corrected. A near-zero rho is a real decoupling.",
-      "baseline_loss_half_a": 4.155357414949025,
-      "baseline_loss_half_b": 3.996821554558215,
-      "gate_max_rel_frobenius": 0.0016610491132543175,
-      "gate_max_rel_error": 0.003258610403300911,
+      "baseline_loss_half_a": 4.108330221737132,
+      "baseline_loss_half_b": 3.9697678509880516,
+      "gate_max_rel_frobenius": 0.0016400229059022127,
+      "gate_max_rel_error": 0.0024993896484375,
       "status": "completed"
     },
     {
       "model": "EleutherAI/pythia-160m",
       "n_heads": 144,
-      "docs_per_half": 24,
+      "docs_per_half": 64,
       "block": 512,
-      "r_delta": 0.3041475765613697,
-      "r_stat": 0.9889197009886664,
-      "ceiling": 0.5484318831628019,
+      "r_delta": 0.4731211317418214,
+      "r_stat": 0.9946587894863758,
+      "ceiling": 0.6859986094583168,
       "verdict": "attenuated",
       "resolvable": false,
       "action": "Report both, lead with rho_corrected, and state the attenuation explicitly.",
-      "baseline_loss_half_a": 5.075584447439847,
-      "baseline_loss_half_b": 4.897773277031984,
-      "gate_max_rel_frobenius": 0.0016322032692196488,
-      "gate_max_rel_error": 0.003040858677455357,
+      "baseline_loss_half_a": 5.0039964563706345,
+      "baseline_loss_half_b": 4.830434911391315,
+      "gate_max_rel_frobenius": 0.0016385365336165068,
+      "gate_max_rel_error": 0.002871629668445122,
       "status": "completed"
     },
     {
       "model": "EleutherAI/pythia-410m",
       "n_heads": 384,
-      "docs_per_half": 24,
+      "docs_per_half": 64,
       "block": 512,
-      "r_delta": 0.44550542048459246,
-      "r_stat": 0.9741823776745449,
-      "ceiling": 0.6587894426860362,
+      "r_delta": 0.43532004717755174,
+      "r_stat": 0.991514572242379,
+      "ceiling": 0.6569826256194166,
       "verdict": "attenuated",
       "resolvable": false,
       "action": "Report both, lead with rho_corrected, and state the attenuation explicitly.",
-      "baseline_loss_half_a": 3.83603349425983,
-      "baseline_loss_half_b": 3.739634912338615,
-      "gate_max_rel_frobenius": 0.0016482617393275586,
-      "gate_max_rel_error": 0.0029526710510253905,
+      "baseline_loss_half_a": 3.8604458079618564,
+      "baseline_loss_half_b": 3.6938274607938877,
+      "gate_max_rel_frobenius": 0.0016489988148171637,
+      "gate_max_rel_error": 0.0031111717224121095,
       "status": "completed"
     }
   ],
@@ -56,12 +56,12 @@
     {
       "model": "gpt2",
       "statistic": "cos_self",
-      "rho_raw": 0.4502170243549554,
-      "pearson_raw": 0.4084367190299234,
-      "r_delta": 0.7519760790696657,
-      "r_stat": 0.9925729442970823,
-      "ceiling": 0.8639392981240949,
-      "rho_disattenuated": 0.5211211312328646,
+      "rho_raw": 0.4689373844546259,
+      "pearson_raw": 0.4097062147475257,
+      "r_delta": 0.7989671248291937,
+      "r_stat": 0.9964753637167431,
+      "ceiling": 0.8922729718600084,
+      "rho_disattenuated": 0.525553725422268,
       "n": 144,
       "verdict": "reliable",
       "resolvable": true
@@ -69,12 +69,12 @@
     {
       "model": "gpt2",
       "statistic": "excess",
-      "rho_raw": 0.18989631058596576,
-      "pearson_raw": 0.413404343120021,
-      "r_delta": 0.7519760790696657,
-      "r_stat": 0.9925729442970823,
-      "ceiling": 0.8639392981240949,
-      "rho_disattenuated": 0.21980283915582383,
+      "rho_raw": 0.2356362028775822,
+      "pearson_raw": 0.42259646726477906,
+      "r_delta": 0.7989671248291937,
+      "r_stat": 0.9964753637167431,
+      "ceiling": 0.8922729718600084,
+      "rho_disattenuated": 0.2640853307327927,
       "n": 144,
       "verdict": "reliable",
       "resolvable": true
@@ -82,12 +82,12 @@
     {
       "model": "EleutherAI/pythia-160m",
       "statistic": "cos_self",
-      "rho_raw": 0.0009725906277630415,
-      "pearson_raw": -0.018620223771252196,
-      "r_delta": 0.3041475765613697,
-      "r_stat": 0.9889197009886664,
-      "ceiling": 0.5484318831628019,
-      "rho_disattenuated": 0.0017734027827742615,
+      "rho_raw": 0.013716743027087855,
+      "pearson_raw": 0.0018671275204597258,
+      "r_delta": 0.4731211317418214,
+      "r_stat": 0.9946587894863758,
+      "ceiling": 0.6859986094583168,
+      "rho_disattenuated": 0.01999529275710773,
       "n": 144,
       "verdict": "attenuated",
       "resolvable": false
@@ -95,12 +95,12 @@
     {
       "model": "EleutherAI/pythia-160m",
       "statistic": "excess",
-      "rho_raw": 0.3964432119604533,
-      "pearson_raw": 0.36278271071942114,
-      "r_delta": 0.3041475765613697,
-      "r_stat": 0.9889197009886664,
-      "ceiling": 0.5484318831628019,
-      "rho_disattenuated": 0.7228668210793449,
+      "rho_raw": 0.48683385579937305,
+      "pearson_raw": 0.4457561159927439,
+      "r_delta": 0.4731211317418214,
+      "r_stat": 0.9946587894863758,
+      "ceiling": 0.6859986094583168,
+      "rho_disattenuated": 0.7096717822559295,
       "n": 144,
       "verdict": "attenuated",
       "resolvable": false
@@ -108,12 +108,12 @@
     {
       "model": "EleutherAI/pythia-410m",
       "statistic": "cos_self",
-      "rho_raw": 0.03875737513139602,
-      "pearson_raw": 0.0873735327444663,
-      "r_delta": 0.44550542048459246,
-      "r_stat": 0.9741823776745449,
-      "ceiling": 0.6587894426860362,
-      "rho_disattenuated": 0.05883120253623568,
+      "rho_raw": 0.09871730457582965,
+      "pearson_raw": 0.10445077821450408,
+      "r_delta": 0.43532004717755174,
+      "r_stat": 0.991514572242379,
+      "ceiling": 0.6569826256194166,
+      "rho_disattenuated": 0.15025862287112535,
       "n": 384,
       "verdict": "attenuated",
       "resolvable": false
@@ -121,12 +121,12 @@
     {
       "model": "EleutherAI/pythia-410m",
       "statistic": "excess",
-      "rho_raw": 0.39252738123495307,
-      "pearson_raw": 0.3155874882794049,
-      "r_delta": 0.44550542048459246,
-      "r_stat": 0.9741823776745449,
-      "ceiling": 0.6587894426860362,
-      "rho_disattenuated": 0.5958313169599813,
+      "rho_raw": 0.2156757684376046,
+      "pearson_raw": 0.15836568179550975,
+      "r_delta": 0.43532004717755174,
+      "r_stat": 0.991514572242379,
+      "ceiling": 0.6569826256194166,
+      "rho_disattenuated": 0.32828230158181293,
       "n": 384,
       "verdict": "attenuated",
       "resolvable": false
@@ -137,252 +137,315 @@
       "model": "gpt2",
       "docs_per_half": 2,
       "replicate": 0,
-      "rank_agreement": 0.2681218030322499,
+      "rank_agreement": 0.2973715939233181,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 2,
       "replicate": 1,
-      "rank_agreement": 0.19515714170886583,
+      "rank_agreement": 0.3355116148219597,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 2,
       "replicate": 2,
-      "rank_agreement": 0.235648496552342,
+      "rank_agreement": 0.3970364088865529,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 4,
       "replicate": 0,
-      "rank_agreement": 0.41705290677308526,
+      "rank_agreement": 0.2943654047102323,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 4,
       "replicate": 1,
-      "rank_agreement": 0.26389759665621737,
+      "rank_agreement": 0.33164938509766095,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 4,
       "replicate": 2,
-      "rank_agreement": 0.2523591351177558,
+      "rank_agreement": 0.4446869222731292,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 8,
       "replicate": 0,
-      "rank_agreement": 0.4673981191222571,
+      "rank_agreement": 0.4894527062263404,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 8,
       "replicate": 1,
-      "rank_agreement": 0.5668113495699703,
+      "rank_agreement": 0.5398199501647778,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 8,
       "replicate": 2,
-      "rank_agreement": 0.45847198778233267,
+      "rank_agreement": 0.5752069769311149,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 16,
       "replicate": 0,
-      "rank_agreement": 0.5934315905392339,
+      "rank_agreement": 0.6691102001446829,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 16,
       "replicate": 1,
-      "rank_agreement": 0.5993087372397717,
+      "rank_agreement": 0.6148541114058356,
       "n_heads": 144
     },
     {
       "model": "gpt2",
       "docs_per_half": 16,
       "replicate": 2,
-      "rank_agreement": 0.5137092212337023,
+      "rank_agreement": 0.5489254771780332,
+      "n_heads": 144
+    },
+    {
+      "model": "gpt2",
+      "docs_per_half": 32,
+      "replicate": 0,
+      "rank_agreement": 0.6314645124989953,
+      "n_heads": 144
+    },
+    {
+      "model": "gpt2",
+      "docs_per_half": 32,
+      "replicate": 1,
+      "rank_agreement": 0.663451491037698,
+      "n_heads": 144
+    },
+    {
+      "model": "gpt2",
+      "docs_per_half": 32,
+      "replicate": 2,
+      "rank_agreement": 0.6855477855477855,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 2,
       "replicate": 0,
-      "rank_agreement": 0.1779479141548107,
+      "rank_agreement": 0.12664978699461457,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 2,
       "replicate": 1,
-      "rank_agreement": 0.16128928542721646,
+      "rank_agreement": 0.016393376738204325,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 2,
       "replicate": 2,
-      "rank_agreement": 0.2678643195884575,
+      "rank_agreement": 0.08433807571738608,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 4,
       "replicate": 0,
-      "rank_agreement": 0.11413471585885379,
+      "rank_agreement": 0.3640462985290572,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 4,
       "replicate": 1,
-      "rank_agreement": -0.36375693272244997,
+      "rank_agreement": 0.16491439594887872,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 4,
       "replicate": 2,
-      "rank_agreement": 0.0904670042601077,
+      "rank_agreement": 0.21090748332127643,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 8,
       "replicate": 0,
-      "rank_agreement": 0.18433003777831367,
+      "rank_agreement": 0.21505505988264612,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 8,
       "replicate": 1,
-      "rank_agreement": 0.2785145888594165,
+      "rank_agreement": -0.24165661924282614,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 8,
       "replicate": 2,
-      "rank_agreement": 0.1612512672326865,
+      "rank_agreement": 0.19353749698577286,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 16,
       "replicate": 0,
-      "rank_agreement": 0.27000241138172176,
+      "rank_agreement": 0.13654850896230208,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 16,
       "replicate": 1,
-      "rank_agreement": 0.3191142191142191,
+      "rank_agreement": 0.11028454304316375,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-160m",
       "docs_per_half": 16,
       "replicate": 2,
-      "rank_agreement": 0.4421670283739249,
+      "rank_agreement": 0.18182621975725427,
+      "n_heads": 144
+    },
+    {
+      "model": "EleutherAI/pythia-160m",
+      "docs_per_half": 32,
+      "replicate": 0,
+      "rank_agreement": 0.23574471505505992,
+      "n_heads": 144
+    },
+    {
+      "model": "EleutherAI/pythia-160m",
+      "docs_per_half": 32,
+      "replicate": 1,
+      "rank_agreement": 0.3527771079495217,
+      "n_heads": 144
+    },
+    {
+      "model": "EleutherAI/pythia-160m",
+      "docs_per_half": 32,
+      "replicate": 2,
+      "rank_agreement": 0.21612008680974196,
       "n_heads": 144
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 2,
       "replicate": 0,
-      "rank_agreement": -0.04583050761249195,
+      "rank_agreement": 0.07018773048280262,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 2,
       "replicate": 1,
-      "rank_agreement": 0.279723686887525,
+      "rank_agreement": -0.06036163575328066,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 2,
       "replicate": 2,
-      "rank_agreement": 0.12501940475689668,
+      "rank_agreement": 0.21695835170051883,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 4,
       "replicate": 0,
-      "rank_agreement": 0.02539948762967348,
+      "rank_agreement": -0.07359312451110646,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 4,
       "replicate": 1,
-      "rank_agreement": 0.13552651656437556,
+      "rank_agreement": 0.21293732690361747,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 4,
       "replicate": 2,
-      "rank_agreement": 0.2531541402461768,
+      "rank_agreement": -0.04938202008473137,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 8,
       "replicate": 0,
-      "rank_agreement": 0.029206369591907828,
+      "rank_agreement": -0.34820561507142145,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 8,
       "replicate": 1,
-      "rank_agreement": 0.2545016121975376,
+      "rank_agreement": 0.28342523990369944,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 8,
       "replicate": 2,
-      "rank_agreement": 0.14135754029606196,
+      "rank_agreement": 0.10920503867732115,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 16,
       "replicate": 0,
-      "rank_agreement": 0.39147918008884064,
+      "rank_agreement": -0.015995350275123756,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 16,
       "replicate": 1,
-      "rank_agreement": 0.13636886475133977,
+      "rank_agreement": 0.0014281904859392187,
       "n_heads": 384
     },
     {
       "model": "EleutherAI/pythia-410m",
       "docs_per_half": 16,
       "replicate": 2,
-      "rank_agreement": 0.5241505378919168,
+      "rank_agreement": 0.07012510915672464,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-410m",
+      "docs_per_half": 32,
+      "replicate": 0,
+      "rank_agreement": 0.3736159308789049,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-410m",
+      "docs_per_half": 32,
+      "replicate": 1,
+      "rank_agreement": 0.32926424212388156,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-410m",
+      "docs_per_half": 32,
+      "replicate": 2,
+      "rank_agreement": 0.07482877717540504,
       "n_heads": 384
     }
   ]

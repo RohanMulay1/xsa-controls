@@ -109,9 +109,17 @@ def generality_fraction(method):
     return f
 
 
-def paired_field(arm, field):
+def paired_field(arm, field, source="paired_tests_s.csv"):
+    """Read a paired-test value, falling back to the underpowered pilot.
+
+    The primary endpoint at 3.999e8 tokens is still running. Until it lands
+    the only paired tests that exist are the 5e7 pilot's, and the claims are
+    labelled as the pilot's rather than quietly presented as the endpoint.
+    """
     def f():
-        data = rows("paired_tests_s.csv")
+        data = rows(source)
+        if data is None:
+            data = rows("paired_tests_s_pilot_5e7.csv")
         if data is None:
             return None
         for r in data:
@@ -230,16 +238,16 @@ CLAIMS = [
     ("massive activations retain 71.7%",
      71.7, "%", "generality.csv", "run_generality.py",
      generality_fraction("massive_activations")),
-    ("the random arm's paired mean delta vs baseline (CFG_S pilot)",
+    ("the random arm's paired mean delta vs baseline (underpowered 5e7 pilot, not the primary endpoint)",
      0.001190, "nats", "paired_tests_s.csv", "run_factorial.py --size S",
      paired_field("random", "mean_delta")),
-    ("the random arm's p value (CFG_S pilot)",
+    ("the random arm's p value (underpowered 5e7 pilot, not the primary endpoint)",
      0.042, "", "paired_tests_s.csv", "run_factorial.py --size S",
      paired_field("random", "p")),
-    ("the xsa arm's paired mean delta vs baseline (CFG_S pilot)",
+    ("the xsa arm's paired mean delta vs baseline (underpowered 5e7 pilot, not the primary endpoint)",
      0.001515, "nats", "paired_tests_s.csv", "run_factorial.py --size S",
      paired_field("xsa", "mean_delta")),
-    ("the xsa arm is not significant (CFG_S pilot)",
+    ("the xsa arm is not significant (underpowered 5e7 pilot, not the primary endpoint)",
      0.387, "", "paired_tests_s.csv", "run_factorial.py --size S",
      paired_field("xsa", "p")),
     ("all ten self-tests pass, step-0 deviation exactly zero",
@@ -251,25 +259,29 @@ CLAIMS = [
      2.3364, "x", "calibration.json", "calibrate_cli.py",
      diagmask_slowdown("M")),
     ("the per-head XSA effect is resolvable in GPT-2 (split-half r_delta)",
-     0.752, "", "reliability.csv", "run_reliability.py",
+     0.799, "", "reliability.csv", "run_reliability.py",
      reliability_field("gpt2", "r_delta")),
     ("in Pythia-160m the raw self-value cosine carries essentially no "
      "information about the measured per-head effect",
-     0.001, "", "a2_correlations.csv", "run_reliability.py",
+     0.014, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-160m", "cos_self", "rho_raw")),
     ("in Pythia-160m the null-corrected excess does predict it",
-     0.396, "", "a2_correlations.csv", "run_reliability.py",
+     0.487, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-160m", "excess", "rho_raw")),
     ("in Pythia-410m the raw self-value cosine again carries almost nothing",
-     0.039, "", "a2_correlations.csv", "run_reliability.py",
+     0.099, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-410m", "cos_self", "rho_raw")),
     ("in Pythia-410m the null-corrected excess again predicts",
-     0.393, "", "a2_correlations.csv", "run_reliability.py",
+     0.216, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("EleutherAI/pythia-410m", "excess", "rho_raw")),
     ("in GPT-2 the ordering reverses: the raw cosine predicts better than "
      "the excess, which is reported rather than averaged away",
-     0.450, "", "a2_correlations.csv", "run_reliability.py",
+     0.469, "", "a2_correlations.csv", "run_reliability.py",
      a2_field("gpt2", "cos_self", "rho_raw")),
+    ("the disattenuated GPT-2 correlation is stable across three independent "
+     "runs at two evaluation budgets on two GPUs (0.521, 0.527, 0.526)",
+     0.526, "", "a2_correlations.csv", "run_reliability.py",
+     a2_field("gpt2", "cos_self", "rho_disattenuated")),
 ]
 
 
