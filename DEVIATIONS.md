@@ -229,18 +229,20 @@ short cycle. Near-zero correlations on that input are what the input
 produces, not a property of the method.
 
 **Measured here, on real wikitext-103 documents** (`results/a2_correlations.csv`,
-24 documents per half, disjoint halves, 144 to 384 heads per model):
+64 documents per half, disjoint halves, 144 to 384 heads per model):
 
 | model | `cos_self` rho | `excess` rho | verdict |
 |---|---|---|---|
-| gpt2 | **+0.450** | +0.190 | reliable |
-| pythia-160m | +0.001 | **+0.396** | attenuated |
-| pythia-410m | +0.039 | **+0.393** | attenuated |
+| gpt2 | **+0.469** | +0.236 | reliable |
+| pythia-160m | +0.014 | **+0.487** | attenuated |
+| pythia-410m | +0.099 | **+0.216** | attenuated |
 
-On GPT-2 the raw statistic correlates at **+0.450**, an order of magnitude
+On GPT-2 the raw statistic correlates at **+0.469**, an order of magnitude
 above the quoted 0.043, and the relationship is real rather than noise: the
-split-half reliability of the effect is +0.752, so the ceiling on any
-observable correlation is 0.864 and +0.450 sits well inside it.
+split-half reliability of the effect is +0.799, so the ceiling on any
+observable correlation is 0.892 and +0.469 sits well inside it. Two further
+runs at a smaller evaluation budget put it at +0.450 and +0.416, so the
+tenfold gap against the prior figure is not a one-run artifact.
 
 **The ordering also reverses across models,** which no single prior number
 could have expressed. On both Pythia models the raw statistic carries

@@ -394,10 +394,11 @@ def fig6_a2_scatter(results: Path, out_dir: Path) -> List[Path]:
     for r in corr:
         stats[(r["model"], r["statistic"])] = r
 
-    fig, axes = plt.subplots(1, len(models), figsize=(4.3 * len(models), 4.0),
+    fig, axes = plt.subplots(1, len(models), figsize=(4.8 * len(models), 4.2),
                              squeeze=False)
+    fig.subplots_adjust(wspace=0.32)
     rows_out = []
-    for ax, model in zip(axes[0], models):
+    for panel, (ax, model) in enumerate(zip(axes[0], models)):
         mine = [r for r in heads if r["model"] == model]
         x = [_num(r["cos_self"]) for r in mine]
         y = [_num(r["delta_pooled"]) for r in mine]
@@ -419,11 +420,17 @@ def fig6_a2_scatter(results: Path, out_dir: Path) -> List[Path]:
             "ceiling         {:.3f}".format(_num(c.get("ceiling"))),
             "n heads          {}".format(len(mine)),
         ])
+        # Boxed, so it stays readable where it sits over the point cloud.
         ax.annotate(note, xy=(0.03, 0.97), xycoords="axes fraction",
                     va="top", ha="left", fontsize=7.6, family="monospace",
-                    color=INK_SECONDARY)
-        _style(ax, "cos(y_i, v_i) per head (dimensionless)",
-               "delta loss when that head's self-value is removed (nats)",
+                    color=INK_SECONDARY,
+                    bbox=dict(boxstyle="round,pad=0.35", facecolor=SURFACE,
+                              edgecolor=GRID, linewidth=0.7, alpha=0.92))
+        # Only the leftmost panel carries the y label: repeating it puts text
+        # from one panel directly against the next panel's data.
+        ylabel = ("delta loss when the head's self-value is removed (nats)"
+                  if panel == 0 else "")
+        _style(ax, "cos(y_i, v_i) per head (dimensionless)", ylabel,
                model.split("/")[-1])
         rows_out.extend(mine)
 

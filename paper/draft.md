@@ -214,34 +214,57 @@ head layout moves that error from 2.0e-4 to 1.4-1.5, four orders of
 magnitude, so the gate distinguishes a correct implementation from a plausible
 wrong one rather than merely reporting a small number.
 
-**Table 5.** Per-head statistic against measured per-head effect.
-`n = 3 models, 144 to 384 heads each.`
+**Table 5.** Per-head statistic against measured per-head effect, at 64
+evaluation documents per half. `n = 3 models, 144 to 384 heads each.`
 
 | model | statistic | raw rho | r_delta | ceiling | disattenuated |
 |---|---|---|---|---|---|
-| gpt2 | cos_self | +0.450 | +0.752 | 0.864 | **+0.521** |
-| gpt2 | excess | +0.190 | +0.752 | 0.864 | +0.220 |
-| pythia-160m | cos_self | **+0.001** | +0.304 | 0.548 | +0.002 |
-| pythia-160m | excess | +0.396 | +0.304 | 0.548 | **+0.723** |
-| pythia-410m | cos_self | **+0.039** | +0.446 | 0.659 | +0.059 |
-| pythia-410m | excess | +0.393 | +0.446 | 0.659 | **+0.596** |
+| gpt2 | cos_self | **+0.469** | +0.799 | 0.892 | **+0.526** |
+| gpt2 | excess | +0.236 | +0.799 | 0.892 | +0.264 |
+| pythia-160m | cos_self | **+0.014** | +0.473 | 0.686 | +0.020 |
+| pythia-160m | excess | +0.487 | +0.473 | 0.686 | **+0.710** |
+| pythia-410m | cos_self | **+0.099** | +0.435 | 0.657 | +0.150 |
+| pythia-410m | excess | +0.216 | +0.435 | 0.657 | **+0.328** |
 
 The effect is resolvable, which is the first thing worth saying: `r_delta` is
-+0.752 in GPT-2 (reliable) and +0.304 and +0.446 in the two Pythia models
-(attenuated). Rank agreement rises monotonically with evaluation budget, from
-about 0.47 at two documents per half to 0.86 at sixteen, so the attenuation is
-a sample-size limit rather than a property of the effect.
++0.799 in GPT-2 (reliable) and +0.473 and +0.435 in the two Pythia models
+(attenuated). Rank agreement rises monotonically with evaluation budget, so
+the attenuation is a sample-size limit rather than a property of the effect.
+
+**How we know that, and why the first version of this table was wrong.** An
+earlier run of exactly this experiment at 24 documents per half produced
+`r_delta` of +0.304 and +0.446 for the two Pythia models. Repeating it, same
+n, different documents and a different GPU, gave +0.194 and **-0.007**: the
+verdict for both models moved from attenuated to unresolvable, and the
+correlations moved with it, `excess` on pythia-160m falling from +0.396 to
++0.129. At 24 documents per half the reliability estimate for these models is
+not stable enough to support any statement built on top of it.
+
+At 64 documents per half it is: +0.473 and +0.435, and the correlations
+recover the pattern the first run showed. We report the 64-document run and
+keep the 24-document runs in `results/a2_budget_comparison/`, because the
+disagreement is more informative than either run alone. It is Check 0 doing
+its job on our own work: an unreliable effect produced a correlation that did
+not survive being measured again.
 
 In both Pythia models the raw self-value cosine -- the quantity the method is
 motivated by -- carries essentially no information about the measured effect
-of removing it: rho = +0.001 and +0.039. The null-corrected excess predicts it
-substantially, +0.396 and +0.393 raw, +0.723 and +0.596 after correcting for
+of removing it: rho = +0.014 and +0.099. The null-corrected excess predicts it
+better in both, +0.487 and +0.216 raw, +0.710 and +0.328 after correcting for
 the ceiling. That is the case for Check 1 stated as a prediction rather than
 as a critique: correcting for the matched null does not merely lower a number,
 it recovers a statistic that tracks the intervention.
 
-**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.450) and the
-excess does not (+0.190). We report this rather than averaging over it.
+**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.469) and the
+excess much less so (+0.236).
+
+The GPT-2 number is the one to trust most. Its disattenuated value is
+**+0.521, +0.527 and +0.526** across three independent runs, at two
+evaluation budgets, on two different GPUs, under two different PyTorch and
+transformers versions. The raw correlation moved over that range (+0.450 to
++0.469) while the disattenuated one did not, because disattenuation divides
+out precisely the reliability that moved. That is the clearest evidence we
+have that the correction is doing what it claims. We report this rather than averaging over it.
 
 ### 5.1 The prior values for this correlation are not usable
 
@@ -249,7 +272,7 @@ The specification we worked from quotes prior GPT-2 values for exactly this
 correlation: **Spearman 0.043 / 0.017 / -0.021** for `cos_self`, `excess` and
 `a_ii`. Taken at face value they say the motivating statistic is unrelated to
 where the intervention helps, and that any larger number is suspect. Our
-+0.450 on GPT-2 is an order of magnitude above the first of them, so the
++0.469 on GPT-2 is an order of magnitude above the first of them, so the
 discrepancy has to be addressed rather than left for a reader to find.
 
 Those values were measured on `SAMPLE_TEXT * 200`: one paragraph repeated two
@@ -262,9 +285,10 @@ heads, so the per-head effects it produces are small and largely
 undifferentiated, and correlating them against anything returns approximately
 zero. Near-zero on that input is a property of the input.
 
-Measured on 24 real wikitext-103 documents per half, with disjoint halves and
+Measured on 64 real wikitext-103 documents per half, with disjoint halves and
 the reliability of the effect established first, the same correlation is
-+0.450 on GPT-2 with a ceiling of 0.864. The prior figures are superseded,
++0.469 on GPT-2 with a ceiling of 0.892, and it held at +0.450 and +0.416 in
+two independent runs at a smaller budget. The prior figures are superseded,
 not contradicted: they are not measurements of the quantity they appear to
 describe. `DEVIATIONS.md` D8 records this. Two
 models agreeing and a third disagreeing is not a general law about statistics,
