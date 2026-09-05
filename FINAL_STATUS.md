@@ -13,7 +13,7 @@
 |---|---|---|
 | Completion | 4/10 | **9.5/10** |
 | Quality | 8/10 | **9.5/10** |
-| Tests | 139 | **241** |
+| Tests | 139 | **251** |
 | Coverage | 74% | **90%** |
 | `calibrate.py` coverage | **0%** | **96%** |
 | Experiments executed | 3, all CPU | A1 ladder to 6.9B, A3 GQA, A6, calibration, pilot, **24-cell CFG_S factorial**, GPT-2 diagnosis |
@@ -71,18 +71,30 @@ repository it returned UNRESOLVABLE with a ceiling of 0.102 on any observable
 correlation, and that project withdrew its headline claim.
 
 **6. The statistic does not predict its own intervention, in two models of
-three.** A2a first: the per-head XSA effect is resolvable, split-half
-`r_delta` +0.752 in GPT-2 and +0.304 and +0.446 in the two Pythia sizes,
-against `r_stat` above +0.97 everywhere. Rank agreement rises monotonically
-with evaluation budget, so the attenuation is a sample-size limit.
+three.** Measured at 64 evaluation documents per half. A2a first: the
+per-head XSA effect is resolvable, split-half `r_delta` +0.799 in GPT-2
+(reliable) and +0.473 and +0.435 in the two Pythia sizes (attenuated),
+against `r_stat` above +0.99 everywhere.
 
 Then A2. In both Pythia models the raw self-value cosine carries essentially
-no information about the measured effect of removing it, rho +0.001 and
-+0.039, while the null-corrected excess predicts it, +0.396 and +0.393 raw and
-+0.723 and +0.596 disattenuated. **In GPT-2 the ordering reverses**, +0.450
-against +0.190. Reported, not averaged away: the claim is that whether a raw
-statistic predicts its own intervention is model-dependent, which is narrower
-than the result we would have preferred.
+no information about the measured effect of removing it, rho +0.014 and
++0.099, while the null-corrected excess predicts it better, +0.487 and +0.216
+raw and +0.710 and +0.328 disattenuated. **In GPT-2 the ordering reverses**,
++0.469 against +0.236. Reported, not averaged away: the claim is that whether
+a raw statistic predicts its own intervention is model-dependent.
+
+**6a. The first version of that result did not reproduce, and the second one
+is why the budget is 64 documents.** Run at 24 documents per half on a
+different GPU, the two Pythia models moved from `r_delta` +0.304 and +0.446
+to +0.194 and **-0.007**: attenuated became unresolvable and the correlations
+followed. At 64 they are stable and the pattern returns. Both 24-document
+runs are kept in `results/a2_budget_comparison/`.
+
+GPT-2's disattenuated value is **+0.521, +0.527, +0.526** across all three
+runs, two budgets, two GPUs and two library versions, while its raw
+correlation moved from +0.450 to +0.469. Disattenuation divides out exactly
+the reliability that moved. That is the best evidence in this repository that
+the correction does what it claims, and it came from a failed reproduction.
 
 **7. The across-group reversal is not a Qwen artifact.** TinyLlama-1.1B, a
 Llama architecture at 32 query heads over 4 KV heads, gives across-group
