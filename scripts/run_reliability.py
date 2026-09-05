@@ -94,7 +94,8 @@ def head_stats(probe, ids, layers, seed=0):
     return {(int(r["layer"]), int(r["head"])): r for r in rows}
 
 
-def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
+def run_model(model_id, n_docs, block, device, dtype, layers_arg,
+              seed=0, seq_len=None):
     print("\n=== {} ===".format(model_id))
     probe = FrozenProbe.from_pretrained(model_id, device=device, dtype=dtype)
     nq, nkv = probe.head_counts()
@@ -114,10 +115,24 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
     # padding would put the intervention on positions that carry no signal
     # and dilute every per-head delta by an amount that varies with the
     # document mix.
-    common = min(b.shape[1] for b in batches)
-    batches = [b[:, :common] for b in batches]
-    print("  {} documents truncated to a common {} tokens".format(
-        sum(b.shape[0] for b in batches), common))
+    # Truncate to a FIXED length, not to the shortest document present.
+    # Taking the minimum makes the sequence length a function of how many
+    # documents were loaded: at 24 documents per half it came out at 142
+    # tokens and at 64 it fell to 137, so raising the evidence also changed
+    # the quantity being measured. This repository's own D4 records that
+    # Check 1 is strongly length-dependent, so that drift is not harmless.
+    # Documents shorter than the target are dropped rather than padded.
+    target = seq_len or min(b.shape[1] for b in batches)
+    usable = [b[:, :target] for b in batches if b.shape[1] >= target]
+    if len(usable) < 4:
+        raise RuntimeError(
+            "only {} of {} documents reach {} tokens; lower --seq-len or "
+            "raise --n-docs".format(len(usable), len(batches), target))
+    dropped = len(batches) - len(usable)
+    batches = usable
+    common = target
+    print("  {} documents at a fixed {} tokens ({} too short, dropped)".format(
+        sum(b.shape[0] for b in batches), common, dropped))
     all_ids = torch.cat(batches, dim=0).to(probe.device)
     if all_ids.shape[0] < 4:
         raise SystemExit("need at least 4 documents to split into halves")
@@ -227,7 +242,7 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg, seed=0):
 
     rel_row = {
         "model": model_id, "n_heads": len(keys), "docs_per_half": half,
-        "block": block, "r_delta": res.r_delta, "r_stat": res.r_stat,
+        "block": block, "seq_len": common, "r_delta": res.r_delta, "r_stat": res.r_stat,
         "ceiling": ceiling, "verdict": res.verdict,
         "resolvable": bool(res.passed), "action": res.action,
         "baseline_loss_half_a": base_a, "baseline_loss_half_b": base_b,
@@ -255,6 +270,12 @@ def main(argv=None):
     # Without somewhere else to put them it silently overwrites committed
     # measurements with two-head toy numbers, which is a data-loss bug, not
     # an inconvenience.
+    ap.add_argument("--seq-len", type=int, default=128,
+                    help="fixed token length every document is truncated to. "
+                         "Fixed on purpose: taking the shortest document "
+                         "present makes the sequence length depend on how "
+                         "many documents were loaded, and Check 1 is "
+                         "length-dependent.")
     ap.add_argument("--results-dir", default=None,
                     help="write outputs here instead of results/. Use it for "
                          "smoke runs so they cannot overwrite real results.")
@@ -269,7 +290,7 @@ def main(argv=None):
         try:
             r, c, s, ph = run_model(model_id, args.n_docs, args.block,
                                     args.device, args.dtype, args.layers,
-                                    args.seed)
+                                    args.seed, args.seq_len)
             rel_rows.append(r)
             corr_rows.extend(c)
             sweeps.extend(s)
