@@ -363,17 +363,44 @@ def day8() -> List[Check]:
     return checks
 
 
+#: Which committed CSV each figure is built from. A figure whose source is
+#: gone is an orphan: the PNG on disk proves nothing about whether it can
+#: still be produced, and checking only for file presence turns this gate
+#: into an inventory of stale images.
+FIGURE_SOURCES = {
+    "fig1_gates": ("factorial_s.csv", "factorial_s_pilot_5e7.csv"),
+    "fig2_paired_delta": ("paired_tests_s.csv", "paired_tests_m.csv",
+                          "paired_tests_s_pilot_5e7.csv"),
+    "fig3_ladder": ("ladder.csv",),
+    "fig4_generality": ("generality.csv",),
+    "fig5_gqa": ("gqa.csv",),
+    "fig6_a2_scatter": ("a2_per_head.csv", "a2_correlations.csv"),
+    "fig7_power": ("paired_tests_s.csv", "paired_tests_s_pilot_5e7.csv"),
+}
+
+
 def day9() -> List[Check]:
     checks: List[Check] = []
     figs = RESULTS / "figures"
     for stem in ("fig1_gates", "fig2_paired_delta", "fig3_ladder",
-                 "fig4_generality", "fig5_gqa"):
+                 "fig4_generality", "fig5_gqa", "fig6_a2_scatter",
+                 "fig7_power"):
         png, pdf = figs / (stem + ".png"), figs / (stem + ".pdf")
         data = figs / (stem + "_data.csv")
-        checks.append((png.exists() and pdf.exists() and data.exists(),
+        have_files = png.exists() and pdf.exists() and data.exists()
+        checks.append((have_files,
                        "{} png + pdf + data.csv".format(stem),
-                       "present" if png.exists() and pdf.exists() and
-                       data.exists() else "MISSING one of png/pdf/_data.csv"))
+                       "present" if have_files
+                       else "MISSING one of png/pdf/_data.csv"))
+        # And that it could still be rebuilt: at least one of its sources
+        # must exist, or the committed image is an orphan.
+        sources = FIGURE_SOURCES.get(stem, ())
+        alive = [n for n in sources if (RESULTS / n).exists()]
+        checks.append((bool(alive),
+                       "{} is still regenerable".format(stem),
+                       "from {}".format(alive[0]) if alive
+                       else "ORPHAN: none of {} exists".format(
+                           ", ".join(sources))))
     return checks
 
 

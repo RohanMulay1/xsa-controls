@@ -163,3 +163,63 @@ class TestOutputProjectionDiscovery:
             pass
         with pytest.raises(AttributeError, match="no output projection"):
             out_projection(Bare())
+
+
+class TestPositionZeroAlignment:
+    """The diagnostic excludes position 0; the intervention must too.
+
+    At position 0 causal softmax runs over one element, so a_00 = 1 and
+    y_0 = v_0 exactly. Removing the self-value component there zeroes the
+    whole head output. Measuring the statistic without position 0 while
+    intervening on it compares two different objects.
+    """
+
+    def test_position_zero_is_left_alone_by_default(self, neox, ids):
+        """Call the rewrite directly: the registered hook is bound at enter,
+        so patching the method afterwards would not intercept anything."""
+        from xsac.intervene import HeadIntervention, out_projection
+        attn = neox._attn_module(neox._layers()[0])
+        proj, _ = out_projection(attn)
+
+        grabbed = {}
+
+        def keep_hidden(module, args, kwargs):
+            if args:
+                grabbed["hidden"] = args[0].detach()
+            elif "hidden_states" in kwargs:
+                grabbed["hidden"] = kwargs["hidden_states"].detach()
+
+        def keep_y(module, args):
+            grabbed["y"] = args[0].detach()
+
+        h1 = attn.register_forward_pre_hook(keep_hidden, with_kwargs=True)
+        h2 = proj.register_forward_pre_hook(keep_y)
+        try:
+            with torch.no_grad():
+                neox.model(ids, use_cache=False)
+        finally:
+            h1.remove()
+            h2.remove()
+
+        hook = HeadIntervention(neox, 0, [0], min_position=1)
+        hook._hidden = grabbed["hidden"]
+        y = grabbed["y"]
+        out = hook._rewrite(proj, (y,))[0]
+
+        nq, _ = neox.head_counts()
+        hd = y.shape[-1] // nq
+        before = y.view(y.shape[0], y.shape[1], nq, hd)
+        after = out.view(out.shape[0], out.shape[1], nq, hd)
+        assert torch.allclose(before[:, 0, 0, :], after[:, 0, 0, :]),             "position 0 was modified despite min_position=1"
+        assert not torch.allclose(before[:, 1:, 0, :], after[:, 1:, 0, :]),             "positions >= 1 were not modified"
+        # Other heads untouched.
+        assert torch.allclose(before[:, :, 1, :], after[:, :, 1, :])
+
+    def test_min_position_zero_restores_the_old_behaviour(self, neox, ids):
+        base = mean_loss(neox, [ids])
+        with xsa_intervention(neox, 0, [0], min_position=1):
+            guarded = mean_loss(neox, [ids])
+        with xsa_intervention(neox, 0, [0], min_position=0):
+            unguarded = mean_loss(neox, [ids])
+        assert guarded != base and unguarded != base
+        assert guarded != unguarded

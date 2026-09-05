@@ -7,7 +7,7 @@ Ceiling **$70.00**. Stop and report if projected spend exceeds **$66.00**.
 | Date | What ran | GPU-hours | $ spent | $ remaining |
 |---|---|---|---|---|
 | 2026-09-03 | Day 1: scaffold, 5 arms, 10/10 self-tests, A4 recompute, Track A on CPU | 0.00 | $0.00 | $70.00 |
-| 2026-09-03 | Calibration, data prep, A1 nine-model ladder, A3 GQA, pilot, CFG_S factorial (12 of 24 cells) | ~7.5 | **~$5.55** | **~$64.45** |
+| 2026-09-03 | Calibration, data prep, A1 nine-model ladder, A3 GQA, pilot, CFG_S pilot factorial (24 cells at 5e7 tokens/run) | ~7.5 | **~$5.55** | **~$64.45** |
 | 2026-09-04/05 | A3 second GQA family (TinyLlama), A2a + A2 on GPT-2 and two Pythia sizes, precision check, and the sibling CRPA project's long-context work | 4.18 | **$5.81** | **$58.64** |
 
 **Total spent to date: $11.36.** The A100 figure is the pod's full billed
@@ -130,7 +130,7 @@ first** and the decision is recorded here with its arithmetic, per spec §7.
 
 **Run on 2026-09-03. Branch chosen: `reduce`.**
 
-Measured from the pilot, 3 arms x 4 seeds at 5e7 tokens per run on an RTX 6000
+Measured from the pilot, 3 arms x 8 seeds at 5e7 tokens per run on an RTX 6000
 Ada:
 
 ```
@@ -141,7 +141,7 @@ action       = Drop the secondary arms. Run 3 arms x 12 seeds at CFG_S.
                Keep the scale check and A1.
 ```
 
-**The MDE is 0.00518 nats. PR #264's measured effect is 0.00076 nats.** The
+**The Day-3 planning MDE was 0.00518 nats; the completed pilot realised 0.00139 (random) and 0.00476 (xsa). PR #264's measured effect is 0.00076 nats.** The
 design as run is underpowered by a factor of about seven against the effect it
 is trying to resolve, and no number of seeds fixes that cheaply: going from 4
 to 12 seeds improves the MDE by sqrt(3), to about 0.0030, which is still four

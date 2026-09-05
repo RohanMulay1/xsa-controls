@@ -39,7 +39,7 @@ nothing.
 | Day gates passing | **1, 2, 3, 8, 9, 10**. Days 4-6 at 4/5, Day 7 at 3/4 |
 | Factorial | **24 cells**, 3 arms x 8 seeds at CFG_S |
 | Scale ladder | **9 models to Pythia-6.9B**, 5,408 head rows |
-| Figures | **5 of 5 from real data**, none skipped |
+| Figures | **7 of 7 from real data**, none skipped |
 | Budget spent | approximately **$12** of $70 |
 
 Two things are genuinely outstanding, both with reasons rather than excuses:

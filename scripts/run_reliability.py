@@ -207,6 +207,13 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg,
     # A2: correlate the pooled effect against each motivating statistic.
     pooled = [0.5 * (da[k] + db[k]) for k in keys]
 
+    def stat_halves(name):
+        """Both halves of one statistic, or None where it was not measured."""
+        if name not in sa[keys[0]] or name not in sb[keys[0]]:
+            return None, None
+        return ([float(sa[k][name]) for k in keys],
+                [float(sb[k][name]) for k in keys])
+
     # Per-head rows, so the correlation can be looked at rather than only
     # summarised. A single rho hides whether a relationship is driven by a
     # handful of heads, and the scatter is the figure that shows it.
@@ -217,26 +224,44 @@ def run_model(model_id, n_docs, block, device, dtype, layers_arg,
                "delta_pooled": dpool}
         for stat_name in ("cos_self", "cos_null", "excess", "a_ii"):
             if stat_name in sa[k]:
+                row[stat_name + "_half_a"] = float(sa[k][stat_name])
                 row[stat_name] = float(sa[k][stat_name])
+            if stat_name in sb[k]:
+                row[stat_name + "_half_b"] = float(sb[k][stat_name])
         per_head.append(row)
     corr_rows = []
     for stat_name in ("cos_self", "excess", "a_ii"):
         if stat_name not in sa[keys[0]]:
             continue
-        values = [float(sa[k][stat_name]) for k in keys]
+        va, vb = stat_halves(stat_name)
+        if va is None:
+            continue
+        # Each statistic gets its OWN split-half reliability. Reusing
+        # cos_self's for excess and a_ii would disattenuate them by a number
+        # measured on a different quantity, and the ceiling reported beside
+        # them would not be their ceiling.
+        r_stat_own = spearman(va, vb)
+        ceiling_own = float(np.sqrt(max(res.r_delta, 0.0)
+                                    * max(r_stat_own, 0.0)))
+        # Pool both halves of the statistic, matching the pooled delta.
+        # Correlating half-A statistic against a two-half delta puts more
+        # noise on one side of the pair than the other.
+        values = [0.5 * (x + y) for x, y in zip(va, vb)]
         raw_s = spearman(values, pooled)
         raw_p = pearson(values, pooled)
-        corrected = disattenuate(raw_s, res.r_delta, res.r_stat)
+        corrected = disattenuate(raw_s, res.r_delta, r_stat_own)
         corr_rows.append({
             "model": model_id, "statistic": stat_name,
             "rho_raw": raw_s, "pearson_raw": raw_p,
-            "r_delta": res.r_delta, "r_stat": res.r_stat,
-            "ceiling": ceiling, "rho_disattenuated": corrected,
+            "r_delta": res.r_delta, "r_stat": r_stat_own,
+            "r_stat_cos_self": res.r_stat,
+            "ceiling": ceiling_own, "rho_disattenuated": corrected,
             "n": len(keys), "verdict": res.verdict,
             "resolvable": bool(res.passed),
         })
-        print("  {:<10s} rho {:+.3f}   ceiling {:.3f}   disattenuated {}"
-              .format(stat_name, raw_s, ceiling,
+        print("  {:<10s} rho {:+.3f}   r_stat {:+.3f}   ceiling {:.3f}   "
+              "disattenuated {}"
+              .format(stat_name, raw_s, r_stat_own, ceiling_own,
                       "{:+.3f}".format(corrected)
                       if np.isfinite(corrected) else "undefined"))
 

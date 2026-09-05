@@ -31,10 +31,9 @@ we withdrew that project's headline claim (§6). We report this as our own
 prior work, not as an independent replication of a third party.
 
 We do not claim to refute XSA. Our training leg runs at 51M parameters against
-XSA's 0.7-2.7B, and at the token budget we could afford the design is
-underpowered by about sevenfold against the effect size an independent
-replication measured (§5). We report that as a power failure, not as a null
-result.
+XSA's 0.7-2.7B, and at the token budget we could afford the design resolves
+the XSA arm only to about 6x the effect size an independent replication
+measured (§5). We report that as a power failure, not as a null result.
 
 ---
 
@@ -106,11 +105,10 @@ the softmax row becomes all `-inf` and produces NaN.
 
 ## 3. Check 1 across scale (A1)
 
-Eleven models and 6,080 head-level rows in total, 32 wikitext-103 documents
+Twelve models and 6,784 head-level rows in total, 32 wikitext-103 documents
 each, eager attention, null partner drawn within the sequence from positions
 the query could causally attend. Table 1 reports the nine multi-head models
-(5,408 heads); the two grouped-query models (672 heads) plus TinyLlama-1.1B
-are in Table 2,
+(5,408 heads); the three grouped-query models (1,376 heads) are in Table 2,
 because the within/across-group split does not exist for multi-head attention.
 
 **Table 1.** Check 1 across the multi-head ladder. `n = 9 MHA models, 5,408 heads.`
@@ -175,8 +173,21 @@ architecture families, 1,376 heads.`
 | TinyLlama-1.1B | 32 / 4 | **+0.2373** | **-0.1126** |
 
 Borrowing a neighbouring group's value at the same position does not merely
-lose the effect; it goes **negative**. The self-value direction is specific to
-the shared KV group. GQA models also show a higher self-specific fraction, 56
+weaken the effect; the excess goes **negative**. That word needs unpacking,
+because the obvious reading of it is wrong.
+
+The raw across-group cosine is **approximately zero**: -0.0006, +0.0009 and
++0.0013 for the three models. A query head's output is essentially
+**orthogonal** to the values of KV groups it does not belong to. There is no
+anti-alignment and we do not claim one. The negative excess is arithmetic:
+excess subtracts the within-sequence null, which is positive (0.187, 0.193,
+0.114), so `0 - cos_null = -cos_null` and the three numbers reproduce exactly.
+
+What the measurement shows is therefore sharper than "it reverses": the
+self-value alignment the method is built on is **entirely specific to the
+head's own KV group**, and disappears completely across groups rather than
+merely shrinking. The self-value direction is a property of the shared KV
+group, not of the query head. GQA models also show a higher self-specific fraction, 56
 to 68%, than any MHA model on the ladder, 37 to 52%. GQA is not a neutral
 change of variable for this family of methods. (Figure 5.)
 
@@ -219,15 +230,21 @@ evaluation documents per half. `n = 3 models, 144 to 384 heads each.`
 
 | model | statistic | raw rho | r_delta | ceiling | disattenuated |
 |---|---|---|---|---|---|
-| gpt2 | cos_self | **+0.469** | +0.799 | 0.892 | **+0.526** |
-| gpt2 | excess | +0.236 | +0.799 | 0.892 | +0.264 |
-| pythia-160m | cos_self | **+0.014** | +0.473 | 0.686 | +0.020 |
-| pythia-160m | excess | +0.487 | +0.473 | 0.686 | **+0.710** |
-| pythia-410m | cos_self | **+0.099** | +0.435 | 0.657 | +0.150 |
-| pythia-410m | excess | +0.216 | +0.435 | 0.657 | **+0.328** |
+| gpt2 | cos_self | **+0.462** | +0.795 | 0.890 | **+0.519** |
+| gpt2 | excess | +0.279 | +0.795 | 0.891 | +0.313 |
+| pythia-160m | cos_self | +0.149 | +0.419 | 0.645 | +0.231 |
+| pythia-160m | excess | +0.189 | +0.419 | 0.646 | +0.292 |
+| pythia-410m | cos_self | **-0.025** | +0.531 | 0.726 | -0.034 |
+| pythia-410m | excess | +0.249 | +0.531 | 0.727 | **+0.342** |
+
+Each statistic is disattenuated by **its own** split-half reliability, not by
+the effect statistic's, and both halves of the statistic are pooled to match
+the pooled effect. An earlier revision did neither, and the difference was
+not cosmetic: pythia-160m's `excess` correlation fell from +0.487 to +0.189
+once the statistic was paired symmetrically against the effect.
 
 The effect is resolvable, which is the first thing worth saying: `r_delta` is
-+0.799 in GPT-2 (reliable) and +0.473 and +0.435 in the two Pythia models
++0.795 in GPT-2 (reliable) and +0.419 and +0.531 in the two Pythia models
 (attenuated). Rank agreement rises monotonically with evaluation budget, so
 the attenuation is a sample-size limit rather than a property of the effect.
 
@@ -247,23 +264,27 @@ disagreement is more informative than either run alone. It is Check 0 doing
 its job on our own work: an unreliable effect produced a correlation that did
 not survive being measured again.
 
-In both Pythia models the raw self-value cosine -- the quantity the method is
-motivated by -- carries essentially no information about the measured effect
-of removing it: rho = +0.014 and +0.099. The null-corrected excess predicts it
-better in both, +0.487 and +0.216 raw, +0.710 and +0.328 after correcting for
-the ceiling. That is the case for Check 1 stated as a prediction rather than
+The three models do not agree, and the disagreement is the result.
+
+In **pythia-410m** the raw self-value cosine -- the quantity the method is
+motivated by -- carries nothing at all about the measured effect of removing
+it (rho = -0.025), while the null-corrected excess carries some (+0.249, or
++0.342 against its ceiling). In **pythia-160m** the two are close and both
+weak (+0.149 against +0.189): that model supports no ordering either way, and
+we do not read one into it. That is the case for Check 1 stated as a prediction rather than
 as a critique: correcting for the matched null does not merely lower a number,
 it recovers a statistic that tracks the intervention.
 
-**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.469) and the
-excess much less so (+0.236).
+**In GPT-2 the ordering reverses.** The raw cosine predicts (+0.462) and the
+excess much less so (+0.279).
 
 The GPT-2 number is the one to trust most. Its disattenuated value is
 **+0.521, +0.527 and +0.526** across three independent runs, at two
 evaluation budgets, on two different GPUs, under two different PyTorch and
-transformers versions. The raw correlation moved over that range (+0.450 to
-+0.469) while the disattenuated one did not, because disattenuation divides
-out precisely the reliability that moved. That is the clearest evidence we
+transformers versions, and two revisions of the analysis. The raw
+correlation moved over that range (+0.416 to +0.469) while the disattenuated
+one did not: **+0.521, +0.527, +0.526, +0.519**. Disattenuation divides out
+precisely the reliability that moved. That is the clearest evidence we
 have that the correction is doing what it claims. We report this rather than averaging over it.
 
 ### 5.1 The prior values for this correlation are not usable
@@ -272,7 +293,7 @@ The specification we worked from quotes prior GPT-2 values for exactly this
 correlation: **Spearman 0.043 / 0.017 / -0.021** for `cos_self`, `excess` and
 `a_ii`. Taken at face value they say the motivating statistic is unrelated to
 where the intervention helps, and that any larger number is suspect. Our
-+0.469 on GPT-2 is an order of magnitude above the first of them, so the
++0.462 on GPT-2 is an order of magnitude above the first of them, so the
 discrepancy has to be addressed rather than left for a reader to find.
 
 Those values were measured on `SAMPLE_TEXT * 200`: one paragraph repeated two
@@ -287,11 +308,11 @@ zero. Near-zero on that input is a property of the input.
 
 Measured on 64 real wikitext-103 documents per half, with disjoint halves and
 the reliability of the effect established first, the same correlation is
-+0.469 on GPT-2 with a ceiling of 0.892, and it held at +0.450 and +0.416 in
-two independent runs at a smaller budget. The prior figures are superseded,
-not contradicted: they are not measurements of the quantity they appear to
-describe. `DEVIATIONS.md` D8 records this. Two
-models agreeing and a third disagreeing is not a general law about statistics,
++0.462 on GPT-2 with a ceiling of 0.890, and it held between +0.416 and
++0.469 across four independent runs. The prior figures are superseded, not
+contradicted: they are not measurements of the quantity they appear to
+describe. `DEVIATIONS.md` D8 records this. One model
+disagreeing with another is not a general law about statistics,
 and the honest summary is narrower than the one we would have liked to write:
 whether the raw statistic predicts its own intervention is model-dependent,
 and a method that assumes it does is assuming something that is false in two
@@ -305,24 +326,41 @@ step 0; measured deviation across all five arms is **0.000e+00**.
 
 At the token budget we could afford, 5e7 tokens per run:
 
-**Table 4.** Paired difference against baseline, CFG_S.
+**Table 4.** Paired difference against baseline, CFG_S underpowered pilot.
+`n = 8 seeds per arm.`
 
-| arm | mean delta | 95% CI | t | p | n |
-|---|---|---|---|---|---|
-| **random** (pre-registered primary) | +0.000921 | [-0.000673, +0.002515] | +0.92 | 0.426 | 4 |
-| xsa | +0.000528 | [-0.002500, +0.005420] | +0.21 | 0.848 | 4 |
+| arm | mean delta | 95% CI | t | p | Cohen d_z | realised sigma | MDE at n=8 |
+|---|---|---|---|---|---|---|---|
+| **random** (pre-registered primary) | **+0.001190** | [+0.000351, +0.002040] | +2.48 | **0.042** | 0.877 | 0.001356 | 0.00139 |
+| xsa | +0.001515 | [-0.001223, +0.004807] | +0.92 | 0.387 | 0.326 | 0.004642 | 0.00476 |
 
-`sigma_paired = 0.00505` gives a minimum detectable effect of **0.00518 nats**.
-The effect an independent replication measured is **0.00076 nats**. The design
-as run is therefore underpowered by about **sevenfold**, and both intervals
-span zero and each other.
+Read the sign first. Both arms are **positive**, meaning both interventions are
+*worse* than baseline at this budget, and the matched arbitrary direction is
+significantly so (p = 0.042, interval excluding zero). They are also not
+distinguishable from each other. At 5e7 tokens per run the models are far below
+the spec's 3.5e8 floor, and a gated rank-one removal plausibly just costs
+capacity there.
 
-**Check 2 returns no verdict at this power.** That is not evidence that XSA and
-a matched arbitrary direction are equivalent, and we do not present it as such.
-The binding constraint is tokens per run rather than seeds: moving from 4 to 12
-seeds improves the MDE only by `sqrt(3)`. We report the power calculation
-because a paper that reports the point estimate without it would be claiming a
-null it cannot support.
+**Power, stated per arm rather than once.** The minimum detectable effect
+depends on the arm's realised paired standard deviation, and the two arms
+differ by a factor of 3.4. Against the **0.00076 nats** an independent
+replication reports:
+
+* the primary endpoint (`random`) resolves to **0.00139**, about **1.8x** the
+  target effect;
+* the arm that matters for the method (`xsa`) resolves to **0.00476**, about
+  **6.3x** it.
+
+A separate figure, **0.00518**, appears in `results/pilot_decision.json`. That
+is the Day-3 **planning** MDE, forecast from a three-seed pilot with
+`sigma_paired = 0.005049` before the factorial was run. It is what sized the
+design, not what the design achieved, and it should not be quoted as a
+measured result. The realised sigmas above are 3.7x and 1.1x smaller.
+
+**Check 2 returns no verdict on XSA at this power.** That is not evidence that
+XSA and a matched arbitrary direction are equivalent, and we do not present it
+as such. We report the power calculation because a paper reporting the point
+estimate without it would be claiming a null it cannot support.
 
 ---
 
@@ -374,9 +412,10 @@ the practice this paper argues against.
   parameters. XSA trains at 0.7-2.7B. We *measure* frozen statistics to 6.9B,
   which covers XSA's range, but a frozen statistic is not a training result.
   **We cannot and do not claim to refute XSA at its scale.**
-* **The training leg is underpowered** by about sevenfold at the budget we
-  could afford (§5). Its point estimates are reported with that caveat attached
-  and are not evidence of equivalence.
+* **The training leg is underpowered** at the budget we could afford (§5),
+  resolving the XSA arm to 0.00476 nats against a 0.00076 target, about 6x.
+  The primary `random` arm is tighter at 0.00139, about 1.8x. Point estimates
+  are reported with that caveat attached and are not evidence of equivalence.
 * **The 124M scale check was not run.** The budget solver dropped it in the
   pre-registered priority order rather than shrinking the primary endpoint.
 * **Two of four A6 methods are not measured.** Value-residual needs a
