@@ -156,3 +156,70 @@ class TestClusteredIntervals:
         a, b = rng.normal(0.5, 0.1, 60), rng.normal(0.3, 0.1, 60)
         assert check_null(a, b).excess == pytest.approx(
             check_null(a, b, clusters=None).excess)
+
+
+class TestBudgetLedger:
+    """The ledger decides whether a running job is stopped, so its
+    arithmetic has to be right. An early version added cell hours to pod
+    uptime, counting the same minutes twice, and reported $18.16 against an
+    $18 ceiling when the real projection was $13.41."""
+
+    def _records(self, tmp_path, seeds, arms=("baseline", "xsa", "random"),
+                 seconds=2400.0):
+        import json
+        runs = tmp_path / "runs"
+        runs.mkdir(parents=True, exist_ok=True)
+        for s in seeds:
+            for a in arms:
+                (runs / "{}_{}.json".format(s, a)).write_text(json.dumps({
+                    "seed": s, "status": "completed",
+                    "config": {"arm": a, "seed": s},
+                    "metrics": {"seconds": seconds, "tokens_seen": 399900672},
+                }), encoding="utf-8")
+        return tmp_path
+
+    def test_only_complete_seeds_count(self, tmp_path):
+        from scripts.budget_ledger import records, summarise
+        d = self._records(tmp_path, [42, 1337])
+        # a third seed with one arm missing
+        import json
+        (tmp_path / "runs" / "7_baseline.json").write_text(json.dumps({
+            "seed": 7, "status": "completed",
+            "config": {"arm": "baseline", "seed": 7},
+            "metrics": {"seconds": 2400.0}}), encoding="utf-8")
+        s = summarise(records(d), 8, 3)
+        assert s["complete_paired_seeds"] == 2
+        assert s["partial_seeds"] == [7]
+
+    def test_pod_uptime_is_the_billed_base_not_uptime_plus_cells(self,
+                                                                 tmp_path):
+        from scripts.budget_ledger import records, summarise
+        s = summarise(records(self._records(tmp_path, [42, 1337, 2024])), 8, 3)
+        cell_hours = s["gpu_hours_so_far"]
+        pod_hours = 7.0
+        rate = 0.74
+        billed = pod_hours * rate
+        wrong = (pod_hours + cell_hours) * rate
+        assert billed < wrong, "the double-counted figure must be larger"
+        projected = (pod_hours + s["projected_remaining_hours"]) * rate
+        assert projected < wrong + s["projected_remaining_hours"] * rate
+
+    def test_projection_uses_completed_seeds_only(self, tmp_path):
+        from scripts.budget_ledger import records, summarise
+        s = summarise(records(self._records(tmp_path, [42, 1337], seconds=1800.0)),
+                      8, 3)
+        assert s["hours_per_seed"] == pytest.approx(1.5)
+        assert s["remaining_seeds"] == 6
+        assert s["projected_remaining_hours"] == pytest.approx(9.0)
+
+    def test_mixed_token_budgets_are_surfaced(self, tmp_path):
+        import json
+        from scripts.budget_ledger import records, summarise
+        d = self._records(tmp_path, [42])
+        (d / "runs" / "1337_baseline.json").write_text(json.dumps({
+            "seed": 1337, "status": "completed",
+            "config": {"arm": "baseline", "seed": 1337},
+            "metrics": {"seconds": 2400.0, "tokens_seen": 50000000}}),
+            encoding="utf-8")
+        s = summarise(records(d), 8, 3)
+        assert len(s["budgets"]) == 2, "a mixed budget must be visible"

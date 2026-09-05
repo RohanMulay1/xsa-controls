@@ -179,3 +179,14 @@ python scripts/verify_day.py 3
 
 The Day-3 gate checks that this file quotes the MDE. Discovering on Day 8 that
 the design had no power is the single most likely way this project fails.
+
+
+## Seed-block ledger, appended as the run proceeds
+
+<!-- seed-block ledger: appended by scripts/budget_ledger.py -->
+
+Each row is written after a seed block completes, so the unit is a **complete paired seed** rather than a cell. The projection assumes the remaining seeds cost what the completed ones did. **The billed column is pod uptime, not cell hours:** the pod charges wall clock and the cells run inside it, so adding the two counts the same minutes twice. An early version of the ledger did exactly that and reported $18.16 against an $18 ceiling when the real projection was $13.41.
+
+| when | progress | GPU-hours in cells | $ of cell work | $ billed (pod uptime) | projected total |
+|---|---|--:|--:|--:|--:|
+| 2026-09-05 16:20 UTC | 3 of 8 paired seeds | 6.54 | $4.84 | $5.35 | $13.41 |
