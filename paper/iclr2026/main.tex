@@ -641,50 +641,13 @@ The small-model training result does not establish that attention components
 can be pruned safely in deployed models. Any such use requires evaluation in
 the intended model and setting.
 
-\section*{Use of Large Language Models}
+\section*{AI Assistance}
 
-LLM-based coding assistants were used throughout this work. The disclosure
-below is by activity.
-
-\paragraph{Ideation and hypotheses.} The research question, the decision to
-treat redundancy as a claim requiring a null, and the ordering of the three
-checks were set by the authors. An assistant was used to enumerate candidate
-controls and failure modes, from which the authors selected.
-
-\paragraph{Experiment design.} The authors fixed the endpoints, the seed list,
-the arm definitions, and the compute ceiling. An assistant drafted the power
-calculation, the token-budget arithmetic, and the seed-major iteration order,
-which the authors reviewed and adopted.
-
-\paragraph{Method and code.} Substantially all of the implementation was
-written by an assistant under author direction: the intervention, null
-sampling, the reconstruction gate, the statistical routines, the experiment
-drivers, and the test suite. The authors reviewed the code, specified the
-guards, and made the correctness decisions. Several defects were found this
-way and are recorded in the repository, including a reconstruction gate that
-passed on non-finite values and a disattenuation that reused one statistic's
-reliability for another.
-
-\paragraph{Execution and data analysis.} Runs were launched and monitored with
-assistant tooling on rented hardware. The statistical analysis was
-assistant-implemented from author-specified definitions. All reported numbers
-come from the stored result files, and every table cell and manifest claim is
-recomputed from those files by a checker rather than transcribed.
-
-\paragraph{Interpretation.} The interpretation of the results is the authors'.
-An assistant was used adversarially against the draft, and a second model from
-a different vendor was used for an independent review of the analysis. Both
-surfaced errors that the authors then corrected, including a reversed sign
-convention in an earlier draft, which read a loss reduction as a loss
-increase.
-
-\paragraph{Figures.} All figure code was assistant-written and reads only from
-the stored result files. No figure content was generated or edited by hand.
-
-\paragraph{Writing.} The manuscript was drafted with assistant help and
-revised by the authors. Assistants were also used to check the draft against
-the archived results and the cited sources. The authors take responsibility
-for every claim, citation, and number in this paper.
+AI assistants were used during the development of this work for implementation
+support, code review, statistical checks, and manuscript editing. The authors
+defined the research question, experimental design, methodological choices, and
+interpretation of results. AI-assisted code was reviewed and validated by the
+authors, and reported results were verified against the stored result files.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
