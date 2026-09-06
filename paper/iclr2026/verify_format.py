@@ -234,7 +234,12 @@ def style_integrity():
             problems.append("%s is missing" % name)
             print("   MISSING   %s" % name)
             continue
-        got = hashlib.sha256(path.read_bytes()).hexdigest()
+        # Hash with newlines normalised. .gitattributes marks these files
+        # -text so a checkout leaves them alone, but a copy that arrived some
+        # other way should not fail this check over line endings it cannot
+        # help; a real edit still changes the hash.
+        got = hashlib.sha256(
+            path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
         if got == want:
             print("   verbatim  %-28s %s" % (name, got[:12]))
         else:
