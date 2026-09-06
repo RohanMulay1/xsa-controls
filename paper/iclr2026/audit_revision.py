@@ -59,6 +59,11 @@ def main():
     base = subprocess.check_output(['git', 'show', state['baseline_commit'] + ':paper/iclr2026/main.tex'], cwd=ROOT).decode('utf-8').replace('\r\n', '\n')
     checks = []
 
+    class _Missing:
+        """Stands in for an absent bibliography entry so the comparison below
+        fails loudly instead of raising on None."""
+        group = staticmethod(lambda _i: None)
+
     def check(name, condition):
         checks.append({'check': name, 'passed': bool(condition)})
 
@@ -66,9 +71,28 @@ def main():
     keys = lambda s: {k.strip() for group in re.findall(pattern, s) for k in group.split(',')}
     bib = (HERE / 'references.bib').read_bytes()
     bibkeys = set(re.findall(r'@\w+\s*\{\s*([^,\s]+)', bib.decode('utf-8')))
-    check('existing citation-key set preserved', keys(text) == keys(base))
+    # The original invariant was that the revision touched no citation and no
+    # bibliography byte. That held for a pure writing pass. The authors have
+    # since authorised one addition, so the property worth holding is narrower:
+    # nothing the baseline cited may be dropped, and any new key must be
+    # declared in the state file rather than appearing unannounced.
+    authorised = set(state.get('authorised_bib_additions', []))
+    check('no baseline citation dropped', keys(base) <= keys(text))
     check('every citation resolves', keys(text) <= bibkeys)
-    check('bibliography byte-for-byte preserved', hashlib.sha256(bib).hexdigest() == state['bibliography_sha256'])
+    check('new citations are authorised', (keys(text) - keys(base)) <= authorised)
+    baseline_bib = subprocess.check_output(
+        ['git', 'show', state['baseline_commit'] + ':paper/iclr2026/references.bib'],
+        cwd=ROOT).decode('utf-8').replace('\r\n', '\n')
+    entry = lambda s, k: re.search(
+        r'@\w+\s*\{\s*%s\s*,.*?\n\}' % re.escape(k), s, re.S)
+    unchanged = all(
+        (entry(bib.decode('utf-8').replace('\r\n', '\n'), k) or _Missing).group(0)
+        == (entry(baseline_bib, k) or _Missing).group(0)
+        for k in set(re.findall(r'@\w+\s*\{\s*([^,\s]+)', baseline_bib)))
+    check('baseline bibliography entries unchanged', unchanged)
+    check('bibliography additions are only the authorised keys',
+          bibkeys - set(re.findall(r'@\w+\s*\{\s*([^,\s]+)', baseline_bib))
+          <= authorised)
     check('all labelled equation bodies preserved', re.findall(r'\\begin\{equation\}.*?\\end\{equation\}', text, re.S) == re.findall(r'\\begin\{equation\}.*?\\end\{equation\}', base, re.S))
     labels = lambda s: sorted(re.findall(r'\\label\{([^}]+)\}', s))
     check('all labels preserved', labels(text) == labels(base))
