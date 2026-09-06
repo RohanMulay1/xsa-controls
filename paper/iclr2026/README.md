@@ -13,6 +13,7 @@ the format is not, and is checked rather than eyeballed.
 | `figs/` | Figures, regenerated from committed results with the in-figure banners switched off. |
 | `verify_format.py` | Compares the compiled PDF against the example, geometry only. |
 | `check_floats.py` | Reports how far each figure and table lands from the text that refers to it. |
+| `check_tables.py` | Recomputes every cell of Tables 1-3 from the archived result files. |
 | `measure.py` | Prints the raw geometry of any PDF. Used to derive the numbers in the `.sty`. |
 | `build.py` | Compile plus both checks in one command. |
 | `reflow_floats.py`, `reflow_tables.py` | One-off edits that moved the float declarations. Kept because they explain why the source is laid out the way it is. |
@@ -44,6 +45,7 @@ Both checks exit non-zero on failure, so they belong in front of a commit.
 ```
 python verify_format.py out/main.pdf ~/Downloads/format+Example.pdf
 python check_floats.py out/main.pdf
+python check_tables.py
 ```
 
 `verify_format.py` compares sixteen metrics: page size, both column edges and
@@ -53,6 +55,14 @@ tolerance is 0.6bp, except for the heading skips, which carry rubber length and
 get 2.0bp.
 
 As of the last run all sixteen match.
+
+`check_tables.py` is the one that matters for the science. The tables are
+written by hand and nothing else in the build reads a CSV, so a table can
+drift from the archive it reports and still compile. It parses the three
+tables out of `main.tex`, recomputes all 48 cells from `results/`, and
+compares at the precision printed. Derived cells are recomputed rather than
+read back, so an arithmetic slip fails too, and a row it does not know how to
+verify is reported rather than skipped. All 48 currently match.
 
 ## Regenerating the figures
 

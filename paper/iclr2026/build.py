@@ -62,6 +62,9 @@ def compile_pdf():
 def verify():
     rc = run([sys.executable, "verify_format.py", PDF, TEMPLATE], cwd=str(HERE))
     rc |= run([sys.executable, "check_floats.py", PDF], cwd=str(HERE))
+    # The tables are hand-written, so nothing else in the build would notice
+    # them drifting from the archive they report.
+    rc |= run([sys.executable, "check_tables.py"], cwd=str(HERE))
     return rc
 
 
