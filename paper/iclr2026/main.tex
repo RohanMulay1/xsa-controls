@@ -1,41 +1,48 @@
-\documentclass[10pt,letterpaper,twocolumn]{article}
-
-\usepackage{iclr2026_conference}
-
+\documentclass{article} % For LaTeX2e
+% T1 must be selected before `times'. This document is compiled with a
+% XeTeX-based engine, whose default TU encoding has no descriptor for the
+% ptm family: without this line every ptm shape is undefined, LaTeX
+% substitutes Latin Modern silently, and \bf stops taking effect, so the
+% venue's Times body text and its bold run-in headings are both lost. The
+% official template was built with pdfTeX, where the question does not arise.
 \usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+\usepackage{iclr2026_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{multirow}
-\usepackage{url}
-% Two 245bp columns of Times leave little room for a bad line break, and the
-% draft had several paragraphs stretched past readability. Expansion recovers
-% them. Protrusion is switched off deliberately: it hangs punctuation about
-% 1bp past the column edge, which is good typography but puts glyphs outside
-% the frame the venue specifies, and verify_format.py reads it as a wider
-% column.
-\usepackage[protrusion=false]{microtype}
-\usepackage[numbers,sort&compress]{natbib}
-\usepackage[hidelinks]{hyperref}
+\usepackage{graphicx}
 
 \newcommand{\vhat}{\hat{\mathbf{v}}}
 \newcommand{\yv}{\mathbf{y}}
 \newcommand{\zv}{\mathbf{z}}
 
-\title{Sanity Checks for Attention Surgery\\
-Null Models and Matched Interventions for\\
+\title{Sanity Checks for Attention Surgery: \\
+Null Models and Matched Interventions for \\
 Representation-Motivated Design}
 
-\author{Anonymous Author\textsuperscript{1}}
-\iclraffiliation{\afmark{1}Anonymous Institution}
-\iclremail{anon@example.invalid}
+% Authors must not appear in the submitted version. The style file replaces
+% this block with the anonymous notice for as long as \iclrfinalcopy stays
+% commented out below.
+\author{Anonymous Author \\
+Anonymous Institution \\
+Anonymous City, Country \\
+\texttt{anon@example.invalid}
+}
 
+%\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
 \begin{document}
 
-\twocolumn[
 \maketitle
-\begin{iclrabstract}
+
+\begin{abstract}
 An attention head's output can align with its own value vector because of
 both self-attention and shared representation geometry. This alignment alone
 does not establish that the aligned component is redundant. We examine it
@@ -54,9 +61,7 @@ baseline ($+0.00106$ nats, $p=0.197$). These results support a benefit from
 learned self-directed removal at the tested scale, but do not establish that
 the component is dispensable in a frozen model or that its cosine alignment
 is a reliable guide to intervention effects.
-\end{iclrabstract}
-\vspace{6pt}
-]
+\end{abstract}
 
 \section{Introduction}
 
@@ -297,7 +302,7 @@ the primary runs.
 
 \begin{table}[tb]
 \centering
-\fontsize{9}{11}\selectfont
+\small
 \begin{tabular}{@{}lrrrl@{}}
 \toprule
 Model & $r_\Delta$ & $r_{\text{stat}}$ & $\rho_{\max}$ & Verdict \\
@@ -317,7 +322,7 @@ attenuation factor in Equation~\ref{eq:ceiling}.}
 
 \begin{table}[tb]
 \centering
-\fontsize{9}{11}\selectfont
+\small
 \begin{tabular}{@{}llrrr@{}}
 \toprule
 Model & Statistic & $\rho_{\text{raw}}$ & $\rho_{\max}$ & $\rho_{\text{disatt}}$ \\
@@ -342,7 +347,7 @@ each statistic's own half-sample reliability.}
 
 \begin{table}[tb]
 \centering
-\fontsize{9}{11}\selectfont
+\small
 \begin{tabular}{@{}lrr@{}}
 \toprule
  & \textsc{random} & \textsc{xsa} \\
@@ -373,20 +378,20 @@ Holm correction does not apply to the primary endpoint.}
 % and with ten of them the deferral compounds: declared in place, figures were
 % surfacing two pages after their first mention. reflow_floats.py did the move
 % and check_floats.py measures the result.
-\begin{figure*}[t]
+\begin{figure}[tb]
 \centering
-\includegraphics[width=0.98\textwidth]{figs/fig6_a2_scatter.pdf}
+\includegraphics[width=0.98\linewidth]{figs/fig6_a2_scatter.pdf}
 \caption{Self-cosine against the loss effect of frozen-head intervention.
 Points use the half-A statistic and the effect averaged over both halves;
 panel annotations report the pooled-statistic correlations in
 Table~\ref{tab:a2}. Dashed least-squares lines are visual guides, not tests
 of significance. Vertical scales differ across panels.}
 \label{fig:a2}
-\end{figure*}
+\end{figure}
 
 \begin{figure}[tb]
 \centering
-\includegraphics[width=\columnwidth]{figs/fig2_paired_delta.pdf}
+\includegraphics[width=0.42\linewidth]{figs/fig2_paired_delta.pdf}
 \caption{Paired difference in validation loss against baseline, with $95\%$
 intervals, over eight paired seeds. The \textsc{random} interval crosses zero
 and the \textsc{xsa} interval lies below zero. The horizontal reference
@@ -401,7 +406,7 @@ target for this experiment.}
 
 \begin{figure}[tb]
 \centering
-\includegraphics[width=\columnwidth]{figs/fig1_gates.pdf}
+\includegraphics[width=0.55\linewidth]{figs/fig1_gates.pdf}
 \caption{Final learned gates $\tanh(\alpha)$ for all heads and seeds, with
 markers at the layer mean. XSA has positive means at every layer. The
 \textsc{random} mean approaches zero by layer four and becomes negative
@@ -412,19 +417,7 @@ endpoint measurements, not gate trajectories during training.}
 
 \begin{figure}[tb]
 \centering
-\includegraphics[width=\columnwidth]{figs/fig7_power.pdf}
-\caption{Approximate MDE for the \textsc{random}-versus-baseline contrast,
-using the observed paired standard deviation at each token budget. Markers
-show the eight seeds actually run; the remaining points extrapolate at fixed
-variance. Both eight-seed estimates exceed the external reference magnitude
-of $0.00076$ nats from the PR~\#264 comparison described in
-Figure~\ref{fig:paired}.}
-\label{fig:power}
-\end{figure}
-
-\begin{figure}[tb]
-\centering
-\includegraphics[width=\columnwidth]{figs/fig3_ladder.pdf}
+\includegraphics[width=0.50\linewidth]{figs/fig3_ladder.pdf}
 \caption{Check~1 across the nine multi-head models in the ladder, every model
 pinned by revision hash. Observed $\cos(\yv_i,\mathbf{v}_i)$, the anisotropy
 null $\cos(\yv_i,\mathbf{v}_j)$, and their difference. The observed curve
@@ -434,19 +427,7 @@ generally declines with scale; the excess has no monotone trend.}
 
 \begin{figure}[tb]
 \centering
-\includegraphics[width=\columnwidth]{figs/fig4_generality.pdf}
-\caption{Observed statistics and their respective nulls for two GPT-2
-diagnostics: attention mass for attention sinks and standard-deviation units
-for massive activations. Both exceed their nulls. The logarithmic axis
-accommodates different magnitudes; values across diagnostics have different
-units. The two blank categories were not run: one requires training matched
-models, and the other requires a vision-model harness.}
-\label{fig:generality}
-\end{figure}
-
-\begin{figure}[tb]
-\centering
-\includegraphics[width=\columnwidth]{figs/fig5_gqa.pdf}
+\includegraphics[width=0.48\linewidth]{figs/fig5_gqa.pdf}
 \caption{Within-group against across-group excess for the three grouped-query
 models. Both subtract the own-group earlier-position null. Own-group excess
 is positive and neighbouring-group excess negative in all three models.
@@ -649,10 +630,39 @@ defined the research question, experimental design, methodological choices, and
 interpretation of results. AI-assisted code was reviewed and validated by the
 authors, and reported results were verified against the stored result files.
 
-\bibliographystyle{plainnat}
+\bibliographystyle{iclr2026_conference}
 \bibliography{references}
 
 \appendix
+
+% Moved here to keep the main text within the nine-page limit.
+% Both figures' numbers are stated in the sections that cite
+% them, so nothing is lost from the argument by their position.
+% See move_to_appendix.py.
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.50\linewidth]{figs/fig7_power.pdf}
+\caption{Approximate MDE for the \textsc{random}-versus-baseline contrast,
+using the observed paired standard deviation at each token budget. Markers
+show the eight seeds actually run; the remaining points extrapolate at fixed
+variance. Both eight-seed estimates exceed the external reference magnitude
+of $0.00076$ nats from the PR~\#264 comparison described in
+Figure~\ref{fig:paired}.}
+\label{fig:power}
+\end{figure}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.48\linewidth]{figs/fig4_generality.pdf}
+\caption{Observed statistics and their respective nulls for two GPT-2
+diagnostics: attention mass for attention sinks and standard-deviation units
+for massive activations. Both exceed their nulls. The logarithmic axis
+accommodates different magnitudes; values across diagnostics have different
+units. The two blank categories were not run: one requires training matched
+models, and the other requires a vision-model harness.}
+\label{fig:generality}
+\end{figure}
+
 
 \section{Arm Definitions}
 \label{app:arms}

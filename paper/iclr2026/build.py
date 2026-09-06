@@ -29,8 +29,7 @@ TECTONIC = os.environ.get(
     str(pathlib.Path(os.path.expanduser("~"))
         / "AppData/Local/Temp/tectonic-msvc/tectonic.exe"))
 TEMPLATE = os.environ.get(
-    "ICLR_TEMPLATE",
-    str(pathlib.Path(os.path.expanduser("~")) / "Downloads/format+Example.pdf"))
+    "ICLR_TEMPLATE", str(HERE / "reference_iclr2026_conference.pdf"))
 
 
 def run(cmd, **kw):

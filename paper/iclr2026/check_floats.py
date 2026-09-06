@@ -19,6 +19,12 @@ import fitz
 
 MAX_DRIFT = 1
 
+# Floats deliberately placed after the bibliography to keep the main text
+# inside the nine-page limit. Their drift is intended, so it is reported
+# separately rather than counted as a failure. See move_to_appendix.py; the
+# numbers are the caption numbers those figures carry.
+APPENDIX_FLOATS = {("Figure", "6"), ("Figure", "7")}
+
 CAPTION = re.compile(r"(Figure|Table)\s+(\d+):")
 REFERENCE = re.compile(r"(Figure|Table)\s+(\d+)(?!:)")
 
@@ -46,6 +52,10 @@ def main(path):
                   % (" ".join(key), shown, "-", "-"))
             continue
         drift = shown - ref
+        if key in APPENDIX_FLOATS:
+            print("%-10s %7d %9d %+7d   in the appendix by design"
+                  % (" ".join(key), shown, ref, drift))
+            continue
         worst = max(worst, abs(drift))
         flag = "  <--" if abs(drift) > MAX_DRIFT else ""
         print("%-10s %7d %9d %+7d%s" % (" ".join(key), shown, ref, drift, flag))

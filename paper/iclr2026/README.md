@@ -1,122 +1,123 @@
-# ICLR 2026 draft
+# ICLR 2026 submission
 
-First draft of the paper. The text is a starting point and expected to change;
-the format is not, and is checked rather than eyeballed.
+The text is a first draft and expected to change. The format is the venue's
+own, taken verbatim from <https://github.com/ICLR/Master-Template>, and it is
+checked rather than eyeballed.
+
+## Format
+
+`iclr2026_conference.sty` and its companions are copied byte-for-byte from the
+`iclr2026/` directory of the Master-Template repository. They are not edited,
+and `verify_format.py` fails if their sha256 changes. Nothing in this directory
+overrides them.
+
+That gives a single column 5.5in wide on US Letter, 9in of text, Times 10pt on
+11pt, small-caps headings, the anonymity notice in place of the author block,
+the line-number ruler, and the running head. The main text limit is **9 pages**,
+with references and anything after them uncounted.
+
+An earlier draft was built to a two-column example from letx.app, which is not
+the venue's format. That style file is kept in `legacy/` rather than deleted;
+see the note there.
 
 ## Files
 
 | File | What it is |
 |---|---|
 | `main.tex` | The paper. This is the file to edit. |
-| `iclr2026_conference.sty` | Page geometry and title furniture, every dimension measured off the venue's example PDF. |
+| `iclr2026_conference.sty`, `.bst`, `fancyhdr.sty`, `natbib.sty`, `math_commands.tex` | The venue's files, verbatim. Do not edit. |
+| `reference_iclr2026_conference.pdf` | The template's own compiled PDF, used as the comparison target. |
 | `references.bib` | Bibliography. |
-| `figs/` | Figures, regenerated from committed results with the in-figure banners switched off. |
-| `verify_format.py` | Compares the compiled PDF against the example, geometry only. |
-| `check_floats.py` | Reports how far each figure and table lands from the text that refers to it. |
-| `check_tables.py` | Recomputes every cell of Tables 1-3 from the archived result files. |
-| `measure.py` | Prints the raw geometry of any PDF. Used to derive the numbers in the `.sty`. |
-| `build.py` | Compile plus both checks in one command. |
-| `reflow_floats.py`, `reflow_tables.py` | One-off edits that moved the float declarations. Kept because they explain why the source is laid out the way it is. |
-| `patch_figures.py` | One-off edit to `xsac/figures.py` adding the `XSAC_FIGURE_TITLES` switch. |
+| `figs/` | Figures, regenerated from committed results with the in-figure banners off. |
+| `build.py` | Compile plus all three checks in one command. |
+| `verify_format.py` | Style-file integrity, frame geometry, running head, page limit. |
+| `check_floats.py` | How far each float lands from the text that refers to it. |
+| `check_tables.py` | Recomputes every cell of Tables 1-3 from the archived results. |
+| `measure.py` | Prints the raw geometry of any PDF. |
+| `resize_figures.py`, `move_to_appendix.py`, `reflow_floats.py`, `reflow_tables.py`, `patch_figures.py` | One-off edits, kept because they explain why the source looks the way it does. |
 
 ## Building
 
 There is no LaTeX installation and no `make` on the machine this was written
-on. Tectonic is self-contained and pulls what it needs on first run:
+on. Tectonic is self-contained and fetches what it needs on first run.
 
 ```
-python build.py            # compile, then run both checks
+python build.py            # compile, then run all three checks
 python build.py --figures  # regenerate figs/ first
 python build.py --preview  # also write preview/p*.png
 ```
 
-Or drive the engine directly:
-
-```
-tectonic -X compile main.tex --outdir out
-```
-
 `out/` must exist first; Tectonic will not create it.
 
-## Checking the format
+### One thing the engine gets wrong without help
 
-Both checks exit non-zero on failure, so they belong in front of a commit.
+Tectonic is XeTeX-based, and XeTeX defaults to the `TU` font encoding, which
+has no descriptor for the `ptm` family that `times` selects. Without an
+explicit `\usepackage[T1]{fontenc}` **before** `times`, every ptm shape is
+undefined, LaTeX silently substitutes Latin Modern, and `\bf` stops taking
+effect, so both the venue's Times body text and its bold run-in headings are
+lost. The compile succeeds and the page looks plausible, which is what makes it
+worth writing down. The official template does not need the line because it was
+built with pdfTeX.
+
+## Checking
+
+All three checks exit non-zero on failure, so they gate a commit.
 
 ```
-python verify_format.py out/main.pdf ~/Downloads/format+Example.pdf
+python verify_format.py out/main.pdf reference_iclr2026_conference.pdf
 python check_floats.py out/main.pdf
 python check_tables.py
 ```
 
-`verify_format.py` compares sixteen metrics: page size, both column edges and
-widths, the gutter, total text width, body leading, the first body line's
-position, and the space above and below section and subsection headings. The
-tolerance is 0.6bp, except for the heading skips, which carry rubber length and
-get 2.0bp.
+`verify_format.py` does four things, in descending order of how much they
+prove:
 
-As of the last run all sixteen match.
+1. **Style integrity.** sha256 of all five venue files against upstream. If
+   these match and nothing overrides them, the margins and skips are the
+   venue's by construction rather than by resemblance.
+2. **Frame geometry** against the template's own compiled PDF: page size, text
+   block edges, text width, body leading, first body line. All exact at the
+   last run.
+3. **Page limit.** Locates the references and fails if the main text runs past
+   page 9.
+4. **Heading skips**, reported as diagnostics with a loose bound. Both
+   documents load the same style file, so these cannot be wrong the way a
+   margin can; what moves them is what happens to precede a heading.
 
 `check_tables.py` is the one that matters for the science. The tables are
-written by hand and nothing else in the build reads a CSV, so a table can
-drift from the archive it reports and still compile. It parses the three
-tables out of `main.tex`, recomputes all 48 cells from `results/`, and
-compares at the precision printed. Derived cells are recomputed rather than
-read back, so an arithmetic slip fails too, and a row it does not know how to
-verify is reported rather than skipped. All 48 currently match.
+written by hand and nothing else in the build reads a CSV, so a table could
+drift from the archive it reports and still compile. It parses the three tables
+out of `main.tex`, recomputes all 48 cells from `results/`, and compares at the
+precision printed. Derived cells are recomputed rather than read back, and a
+row it does not know how to verify is reported rather than skipped. All 48
+currently match.
+
+`check_floats.py` allows two figures to sit behind the bibliography by design;
+see `move_to_appendix.py` for why.
 
 ## Regenerating the figures
 
-The figures come from the experiment repository, not from this directory. They
-carry a `Figure N ...` banner drawn inside the artwork, which is right for the
-report PDF and wrong here, because the caption sits directly under the image.
-`XSAC_FIGURE_TITLES=0` suppresses the banner and leaves the panel labels alone:
+The figures come from the experiment repository, not from here. They carry a
+`Figure N ...` banner drawn inside the artwork, which suits the report PDF and
+duplicates the caption here.
 
 ```
 cd ../..
 XSAC_FIGURE_TITLES=0 python scripts/make_figures.py --out paper/iclr2026/figs
 ```
 
-Without the variable the figures come out exactly as the report expects them,
-so this changes nothing for the other consumer.
-
-## What the style file does that the article class does not
-
-The venue's example is a 10pt two-column `article` at heart, so most of the
-class defaults are already right: `\Large` is the 14.4pt section size, `\large`
-is the 12pt subsection size, `\LARGE` is the 17.28pt title. What the style file
-supplies is the frame and the title block.
-
-Three things are worth knowing before editing it.
-
-**Dimensions are in `bp`, not `pt`.** A PDF viewer measures in big points,
-1/72 in. TeX's point is 1/72.27 in. Setting `\paperwidth` to `612pt` yields a
-609.71bp page, which looks right in the source and is 0.4% short on paper. The
-first compile here had exactly that bug.
-
-**`\pdfpagewidth` has to be set too.** `xdvipdfmx` reads the page size from
-there, not from `\paperwidth`, and falls back to a default without complaint.
-
-**Two values are matched, not derived.** `\topmargin` is 0.8bp off its
-arithmetic value because a line box's top follows the ascender of whichever
-glyph starts the line, and the heading skips are tuned against measured medians
-rather than computed from `\parskip`. `verify_format.py` checks the result, so
-if you change either, re-run it rather than re-deriving.
-
-## Running head
-
-The example carries no running head, so the default has none and
-`verify_format.py` is calibrated to that. A real submission wants one; pass the
-option:
-
-```latex
-\usepackage[runninghead]{iclr2026_conference}
-```
-
-This adds 12bp of header text at the top of every page. It does not move the
-text block.
+Without the variable the figures come out exactly as the report expects, so
+this changes nothing for the other consumer. Figure widths are set per figure
+in `resize_figures.py`; at 5.5in a plot left at `\linewidth` dominates the page.
 
 ## Anonymity
 
-The draft is already anonymous: `Anonymous Author`, `Anonymous Institution`,
-`anon@example.invalid`. See `../../ANONYMIZE.md` for what still carries
-identity in the repository itself, which is a separate problem from the PDF.
+The style file supplies the anonymity notice on its own for as long as
+`\iclrfinalcopy` stays commented out in `main.tex`, and prints the running head
+that goes with it. `verify_format.py` checks the running head appears on every
+page, which is the cheap way to catch `\iclrfinalcopy` being uncommented by
+accident.
+
+`../../ANONYMIZE.md` covers what still carries identity in the repository
+itself, which is a separate problem from the PDF.
