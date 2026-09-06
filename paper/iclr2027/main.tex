@@ -6,7 +6,7 @@
 % venue's Times body text and its bold run-in headings are both lost. The
 % official template was built with pdfTeX, where the question does not arise.
 \usepackage[T1]{fontenc}
-\usepackage{iclr2026_conference,times}
+\usepackage{iclr2027_conference,times}
 
 % Optional math commands from https://github.com/goodfeli/dlbook_notation.
 \input{math_commands.tex}
@@ -624,13 +624,42 @@ the intended model and setting.
 
 \section*{AI Assistance}
 
-AI assistants were used during the development of this work for implementation
-support, code review, statistical checks, and manuscript editing. The authors
+AI assistants were used during the development of this work. The authors
 defined the research question, experimental design, methodological choices, and
 interpretation of results. AI-assisted code was reviewed and validated by the
 authors, and reported results were verified against the stored result files.
+The authors take responsibility for every claim, citation, and number in this
+paper. Use by category:
 
-\bibliographystyle{iclr2026_conference}
+\begin{itemize}
+\setlength{\itemsep}{2pt}
+\item \textbf{Synthetic data.} None. All text is public corpora; no generated
+data enters any result.
+\item \textbf{Theory and proofs.} None. The paper contains no theorem or
+proof.
+\item \textbf{Methodology and experiment design.} Author-defined. Assistants
+enumerated candidate controls and failure modes and drafted the power and
+token-budget arithmetic, which the authors reviewed before adoption.
+\item \textbf{Core code.} Assistant-written under author direction: the
+intervention, null sampling, the reconstruction gate, the statistical
+routines, the experiment drivers, and the tests. The authors reviewed it and
+specified the guards. Defects found this way are recorded in the repository.
+\item \textbf{Data cleaning and analysis.} Assistant-implemented from
+author-specified definitions. Every table cell and manifest claim is
+recomputed from the stored files by a checker rather than transcribed.
+\item \textbf{Interpreting results.} Author-owned. Assistants were used
+adversarially against the draft, and a second model from a different vendor
+reviewed the analysis; both surfaced errors the authors then corrected,
+including a reversed sign convention in an earlier draft.
+\item \textbf{Figures.} All figure code is assistant-written and reads only
+from the stored result files. No figure content was drawn or edited by hand.
+\item \textbf{Writing and editing.} The manuscript was drafted with assistant
+help and revised by the authors, who also used assistants to check the draft
+against the archived results and the cited sources.
+\item \textbf{Translation.} None. The work was written in English throughout.
+\end{itemize}
+
+\bibliographystyle{iclr2027_conference}
 \bibliography{references}
 
 \appendix

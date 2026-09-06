@@ -1,4 +1,4 @@
-# ICLR 2026 submission
+# ICLR 2027 submission
 
 The text is a first draft and expected to change. The format is the venue's
 own, taken verbatim from <https://github.com/ICLR/Master-Template>, and it is
@@ -6,8 +6,8 @@ checked rather than eyeballed.
 
 ## Format
 
-`iclr2026_conference.sty` and its companions are copied byte-for-byte from the
-`iclr2026/` directory of the Master-Template repository. They are not edited,
+`iclr2027_conference.sty` and its companions are copied byte-for-byte from the
+`iclr2027/` directory of the Master-Template repository. They are not edited,
 and `verify_format.py` fails if their sha256 changes. Nothing in this directory
 overrides them.
 
@@ -16,17 +16,17 @@ That gives a single column 5.5in wide on US Letter, 9in of text, Times 10pt on
 the line-number ruler, and the running head. The main text limit is **9 pages**,
 with references and anything after them uncounted.
 
-An earlier draft was built to a two-column example from letx.app, which is not
-the venue's format. That style file is kept in `legacy/` rather than deleted;
-see the note there.
+Two earlier states are kept in `legacy/` rather than deleted: a two-column
+style built to an unofficial letx.app example, and the 2026 files this
+submission moved off. See the note there.
 
 ## Files
 
 | File | What it is |
 |---|---|
 | `main.tex` | The paper. This is the file to edit. |
-| `iclr2026_conference.sty`, `.bst`, `fancyhdr.sty`, `natbib.sty`, `math_commands.tex` | The venue's files, verbatim. Do not edit. |
-| `reference_iclr2026_conference.pdf` | The template's own compiled PDF, used as the comparison target. |
+| `iclr2027_conference.sty`, `.bst`, `fancyhdr.sty`, `natbib.sty`, `math_commands.tex` | The venue's files, verbatim. Do not edit. |
+| `reference_iclr2026_conference.pdf` | The only compiled PDF the repository ships. Valid as a 2027 geometry target: the 2027 style differs from 2026 only in the header year, and the other four files are byte identical. |
 | `references.bib` | Bibliography. |
 | `figs/` | Figures, regenerated from committed results with the in-figure banners off. |
 | `build.py` | Compile plus all three checks in one command. |
@@ -104,7 +104,7 @@ duplicates the caption here.
 
 ```
 cd ../..
-XSAC_FIGURE_TITLES=0 python scripts/make_figures.py --out paper/iclr2026/figs
+XSAC_FIGURE_TITLES=0 python scripts/make_figures.py --out paper/iclr2027/figs
 ```
 
 Without the variable the figures come out exactly as the report expects, so
@@ -115,8 +115,8 @@ in `resize_figures.py`; at 5.5in a plot left at `\linewidth` dominates the page.
 
 The style file supplies the anonymity notice on its own for as long as
 `\iclrfinalcopy` stays commented out in `main.tex`, and prints the running head
-that goes with it. `verify_format.py` checks the running head appears on every
-page, which is the cheap way to catch `\iclrfinalcopy` being uncommented by
+that goes with it, reading "Under review as a conference paper at ICLR 2027".
+`verify_format.py` checks that exact string appears on every page, which is the cheap way to catch `\iclrfinalcopy` being uncommented by
 accident.
 
 `../../ANONYMIZE.md` covers what still carries identity in the repository

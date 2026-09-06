@@ -17,6 +17,6 @@ logs/*.log
 .coverage
 
 # Paper build products. The PDF is regenerable from main.tex plus figs/.
-paper/iclr2026/out/
-paper/iclr2026/preview/
-paper/iclr2026/__pycache__/
+paper/iclr2027/out/
+paper/iclr2027/preview/
+paper/iclr2027/__pycache__/

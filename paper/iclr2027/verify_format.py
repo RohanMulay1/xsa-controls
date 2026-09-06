@@ -1,14 +1,15 @@
 """Compare the compiled draft against the venue's own compiled template.
 
-The reference is `reference_iclr2026_conference.pdf`, the PDF shipped in
-https://github.com/ICLR/Master-Template alongside the style file this document
-loads unmodified. Comparing against it catches the case that matters: a
+The reference is `reference_iclr2026_conference.pdf`, the only compiled PDF the
+Master-Template repository ships. It is a valid target for a 2027 submission
+because the 2027 style differs from the 2026 one only in the header year; no
+dimension changed, and the other four files are byte identical across the two. Comparing against it catches the case that matters: a
 preamble option or a stray package that moves the frame even though the
 official `.sty` is present and untouched.
 
     python verify_format.py out/main.pdf reference_iclr2026_conference.pdf
 
-ICLR 2026 is a single column, so the metrics are the text block rather than
+ICLR 2027 is a single column, so the metrics are the text block rather than
 two columns and a gutter. Nothing here reads words; the two documents share no
 content.
 
@@ -35,12 +36,12 @@ LOOSE = {"sec_above": 6.0, "sec_below": 6.0,
          "subsec_above": 6.0, "subsec_below": 6.0}
 
 # sha256 of the files taken verbatim from
-# https://github.com/ICLR/Master-Template, iclr2026/. If one of these changes,
+# https://github.com/ICLR/Master-Template, iclr2027/. If one of these changes,
 # the format is no longer the venue's whatever the rendered page looks like.
 UPSTREAM = {
-    "iclr2026_conference.sty":
-        "a4852f68e080d6c5245057ca2039100b409e31727898aa93c03d78ddb84374a3",
-    "iclr2026_conference.bst":
+    "iclr2027_conference.sty":
+        "797deef41724e93761426ac0cbcca46279a91cc650dd1f0ce76a4f08d2098ea6",
+    "iclr2027_conference.bst":
         "2d67552db7ed38ccfccb5957b52f95656e25c249724761d3cf5f7922ad1844c5",
     "fancyhdr.sty":
         "b56ec4434b9f4607529a4b23dc68ad8d4b94f1f631c8cddaf7da78140d53a5ea",
@@ -56,13 +57,17 @@ BODY_SIZES = (9.9, 10.0, 10.1)
 
 # "There will be a strict upper limit of 9 pages for the main text of the
 # initial submission, with unlimited additional pages for citations."
-# iclr2026_conference.tex, line 131.
+# iclr2027_conference.tex, line 131.
 MAIN_TEXT_PAGE_LIMIT = 9
 
 # The submission style prints a vertical line-number ruler in the left margin
 # and a running head at the top. Both are set well outside the text block, so
 # body-size lines are filtered by x as well as by size.
 TEXT_LEFT_MIN = 90.0
+
+# Printed on every page while \iclrfinalcopy stays commented out. Its
+# absence means the PDF is not anonymous.
+RUNNING_HEAD = "Under review as a conference paper at ICLR 2027"
 
 
 def body_lines(doc):
@@ -128,9 +133,6 @@ def _page_lines(page):
                 out.append((round(line["bbox"][1], 1),
                             round(spans[0]["size"], 1), text))
     return out
-
-
-RUNNING_HEAD = "Under review as a conference paper"
 
 
 def _is_smallcaps_heading(text):
@@ -204,7 +206,7 @@ def running_head(doc):
     hits = 0
     for page in doc:
         top = page.get_text("text", clip=fitz.Rect(0, 0, page.rect.width, 70))
-        if "Under review as a conference paper" in top:
+        if RUNNING_HEAD in top:
             hits += 1
     return hits
 

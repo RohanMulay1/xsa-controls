@@ -46,7 +46,7 @@ def figures():
     """
     env = dict(os.environ, XSAC_FIGURE_TITLES="0")
     return run([sys.executable, "scripts/make_figures.py",
-                "--out", "paper/iclr2026/figs"], cwd=str(REPO), env=env)
+                "--out", "paper/iclr2027/figs"], cwd=str(REPO), env=env)
 
 
 def compile_pdf():
