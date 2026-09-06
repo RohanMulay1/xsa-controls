@@ -32,7 +32,7 @@ Spec section 15, verbatim, with status and evidence.
 | # | Item | Status | Evidence / reason |
 |---|---|---|---|
 | 1 | All 10 self-tests green | **DONE** | 10/10; step-0 deviation 0.000e+00 across all five arms |
-| 2 | `factorial_s.csv` / `factorial_m.csv` | **PARTIAL** | **24 CFG_S pilot cells complete** (3 arms x 8 seeds) at 5e7 tokens/run, pairing verified: identical `tokens_seen` per seed. Kept as `factorial_s_pilot_5e7.csv`. The primary endpoint at 399,900,672 tokens/run is running; CFG_M dropped for budget with its arithmetic recorded |
+| 2 | `factorial_s.csv` / `factorial_m.csv` | **DONE / dropped** | **Primary endpoint complete**: 24 CFG_S cells (3 arms x 8 seeds) at 399,900,672 tokens/run, one budget across the grid, pairing verified. The 5e7 pilot is kept as `factorial_s_pilot_5e7.csv`. CFG_M dropped for budget with its arithmetic recorded |
 | 3 | `paired_tests.csv` | **DONE** | Written. Primary endpoint first and labelled; Holm over the secondary family only. n=4 |
 | 4 | `reliability.csv` (A2a, blocks A2) | **DONE (as code + applied elsewhere)** | `check_resolvability` implements the protocol and the pre-registered rule. It was **applied for real** to the CRPA project's headline claim, which it caused to be withdrawn. Not yet run against a frozen model here |
 | 5 | `ladder.csv`, nine models to 6.9B | **DONE** | 5,408 head rows, nine models, Pythia-2.8B and 6.9B both present |
