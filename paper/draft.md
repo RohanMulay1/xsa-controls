@@ -24,16 +24,23 @@ statistic behaves structurally differently: self-value similarity is specific
 to a head's own KV group, and borrowing a neighbouring group's value goes
 negative (Table 2, Figure 5). **(3)** Applied to two other methods, the same
 null leaves 99.2% and 71.7% of their statistics intact (Table 3, Figure 4), so
-the checklist discriminates rather than debunking uniformly. **(4)** Applied to our own
+the checklist discriminates rather than debunking uniformly. **(3b)** Run at
+an adequate budget, Check 2 **passes for XSA**: the method improves loss
+(Holm p = 0.0022) where a matched arbitrary direction does not (p = 0.197),
+so the checklist is not a device for rejecting things (§6.1). **(4)** Applied to our own
 earlier, unpublished reproduction of a partitioned-attention method, the
 resolvability check found the single-edge effect unmeasurable in float32 and
 we withdrew that project's headline claim (§6). We report this as our own
 prior work, not as an independent replication of a third party.
 
-We do not claim to refute XSA. Our training leg runs at 51M parameters against
-XSA's 0.7-2.7B, and at the token budget we could afford the design resolves
-the XSA arm only to about 6x the effect size an independent replication
-measured (§5). We report that as a power failure, not as a null result.
+**We do not refute XSA, and at an adequate budget our own Check 2 supports
+it.** At 3.999e8 tokens per run, eight paired seeds, XSA improves validation
+loss by -0.00292 nats (Holm p = 0.0022) while a matched arbitrary rank-one
+direction does not (p = 0.197), and XSA beats that control directly
+(p = 0.0018). The effect is specific to the direction removed. Our training
+leg is 51M parameters against XSA's 0.7-2.7B, so this neither confirms the
+method at scale nor adjudicates between XSA's claimed -0.017 and the
+independent replication's -0.00076; our -0.00292 sits between them.
 
 ---
 
@@ -324,7 +331,46 @@ Five arms, identical initialisation and data order per seed, differing only in
 the intervention. Zero-initialised gates make every arm exactly the baseline at
 step 0; measured deviation across all five arms is **0.000e+00**.
 
-At the token budget we could afford, 5e7 tokens per run:
+### 6.1 The primary endpoint, at 3.999e8 tokens per run
+
+Eight seeds, three arms, one token budget across the whole grid, arms sharing
+initialisation and data order within each seed. Step-0 validation loss is
+bit-identical across arms within a seed, so a paired difference isolates the
+intervention.
+
+**Table 4.** Paired difference in final validation loss. `n = 8 seeds.`
+
+| comparison | mean delta | 95% CI | t | p | realised MDE |
+|---|---|---|---|---|---|
+| `random` vs baseline (**pre-registered primary**) | +0.001056 | [-0.000695, +0.002808] | +1.43 | 0.197 | 0.00215 |
+| `xsa` vs baseline (secondary, Holm) | **-0.002924** | [-0.004406, -0.001442] | -4.67 | **0.0022** | 0.00182 |
+| `xsa` vs `random` | **-0.003980** | [-0.005916, -0.002045] | -4.86 | **0.0018** | 0.00237 |
+
+**Check 2 passes, and it passes for XSA.** The pre-registered primary
+endpoint returns a null: a matched arbitrary rank-one direction does not
+improve on baseline, and its interval spans zero. The XSA direction does,
+by -0.00292 nats, and it beats the matched arbitrary direction directly by
+-0.00398. The effect is specific to the direction removed. That is precisely
+the question Check 2 was built to ask, and the answer at an adequate budget
+is that the mechanism is not recovered by an arbitrary intervention.
+
+We report this plainly because it cuts against the framing this paper began
+with. Our earlier pilot at 5e7 tokens per run found both arms *positive*, the
+arbitrary one significantly so, and we reported it as a power failure rather
+than a result. It was a power failure: the realised MDE there was 0.00476 for
+the XSA arm against an effect of -0.00292, so the pilot could not have
+resolved this sign. At 3.999e8 the MDE falls to 0.00182 and the effect
+appears.
+
+**The size sits between the two prior figures.** XSA's own claim is -0.017
+and the independent replication reports -0.00076. We measure -0.00292: about
+6x smaller than the original claim and about 4x larger than the replication.
+We do not adjudicate between them; our model is 51M parameters against XSA's
+0.7-2.7B, and a training result at that scale bounds neither.
+
+### 6.2 The underpowered pilot, kept for the power analysis
+
+At 5e7 tokens per run:
 
 **Table 4.** Paired difference against baseline, CFG_S underpowered pilot.
 `n = 8 seeds per arm.`
@@ -357,10 +403,13 @@ is the Day-3 **planning** MDE, forecast from a three-seed pilot with
 design, not what the design achieved, and it should not be quoted as a
 measured result. The realised sigmas above are 3.7x and 1.1x smaller.
 
-**Check 2 returns no verdict on XSA at this power.** That is not evidence that
-XSA and a matched arbitrary direction are equivalent, and we do not present it
-as such. We report the power calculation because a paper reporting the point
-estimate without it would be claiming a null it cannot support.
+**At this budget Check 2 returns no verdict**, and the realised MDE says why:
+0.00476 for the XSA arm against an effect that turns out to be -0.00292. The
+pilot could not have resolved the sign it was being asked about. Section 6.1
+runs the same design at 3.999e8 tokens, where the MDE falls to 0.00182 and
+the effect appears. We keep this table because it is what the power analysis
+is computed from, and because a pilot that pointed the wrong way is worth
+showing next to the run that settled it.
 
 ---
 

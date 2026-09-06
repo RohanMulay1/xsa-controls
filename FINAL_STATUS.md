@@ -30,27 +30,26 @@ see below.
 
 ## Key findings
 
-**1. The primary endpoint, at full seed count.** 24 cells, 3 arms x 8 seeds,
-CFG_S, 5e7 tokens per run:
+**1. The primary endpoint, at the registered budget.** 24 cells, 3 arms x 8
+seeds, CFG_S, **399,900,672 tokens per run**, one budget across the whole
+grid, step-0 loss bit-identical across arms within a seed:
 
-| arm | mean delta vs baseline | 95% CI | t | p | n |
-|---|---|---|---|---|---|
-| **random** (pre-registered primary) | **+0.001190** | [+0.000351, +0.002040] | +2.48 | **0.042** | 8 |
-| xsa | +0.001515 | [-0.001223, +0.004807] | +0.92 | 0.387 | 8 |
+| comparison | mean delta | 95% CI | p | realised MDE |
+|---|---|---|---|---|
+| `random` vs baseline (**pre-registered primary**) | +0.001056 | [-0.000695, +0.002808] | 0.197 | 0.00215 |
+| `xsa` vs baseline (secondary, Holm) | **-0.002924** | [-0.004406, -0.001442] | **0.0022** | 0.00182 |
+| `xsa` vs `random` | **-0.003980** | [-0.005916, -0.002045] | **0.0018** | 0.00237 |
 
-Read carefully. The sign is **positive**, meaning both interventions are
-*worse* than baseline at this budget, and the matched arbitrary direction is
-significantly so. They are also indistinguishable from each other: +0.0012 and
-+0.0015 with overlapping intervals.
+**Check 2 passes, and it passes for the method under scrutiny.** The
+pre-registered primary returns a null: a matched arbitrary rank-one direction
+does not improve on baseline. XSA does, and beats that control directly. The
+effect is specific to the direction removed.
 
-**This is not a refutation of XSA and we do not present it as one.** At 5e7
-tokens per run the models are trained far below the spec's 3.5e8 floor, and a
-gated rank-one removal plausibly just costs capacity there. The measured MDE
-for the `xsa` arm (0.00476 nats, realised) remains about **6x** larger than the
-effect XSA's independent replication reports (0.00076), so this design still
-cannot resolve the claimed effect in either direction. The primary `random`
-arm is tighter at 0.00139. The 0.00518 figure quoted previously was the Day-3
-**planning** MDE from a three-seed pilot, not a realised result.
+This reverses what the 5e7 pilot suggested, where both arms were positive and
+the arbitrary one significantly so. That pilot was not wrong, it was
+underpowered: its realised MDE for the XSA arm was 0.00476 against an effect
+of -0.00292. It is kept as `factorial_s_pilot_5e7.csv` and is what the power
+analysis is computed from.
 
 **2. The scale objection, answered with measurement.** Twelve models, 6,784
 head rows (nine MHA, 5,408 heads; three GQA, 1,376). **58% of `cos(y_i, v_i)` is

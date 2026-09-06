@@ -190,3 +190,4 @@ Each row is written after a seed block completes, so the unit is a **complete pa
 | when | progress | GPU-hours in cells | $ of cell work | $ billed (pod uptime) | projected total |
 |---|---|--:|--:|--:|--:|
 | 2026-09-05 16:20 UTC | 3 of 8 paired seeds | 6.54 | $4.84 | $5.35 | $13.41 |
+| 2026-09-06 06:10 UTC | 8 of 8 paired seeds | 16.98 | $12.56 | $15.58 | $15.58 |
