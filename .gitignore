@@ -20,3 +20,5 @@ logs/*.log
 paper/iclr2027/out/
 paper/iclr2027/preview/
 paper/iclr2027/__pycache__/
+paper/iclr2027/docx/reference.docx
+paper/iclr2027/docx/main_docx.tex

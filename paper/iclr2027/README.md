@@ -34,6 +34,8 @@ submission moved off. See the note there.
 | `check_floats.py` | How far each float lands from the text that refers to it. |
 | `check_tables.py` | Recomputes every cell of Tables 1-3 from the archived results. |
 | `measure.py` | Prints the raw geometry of any PDF. |
+| `build_docx.py` | Builds `docx/main.docx` from `main.tex` and checks it. |
+| `verify_docx.py` | 22 checks on the .docx: page setup, content parity, breakage. |
 | `resize_figures.py`, `move_to_appendix.py`, `reflow_floats.py`, `reflow_tables.py`, `patch_figures.py` | One-off edits, kept because they explain why the source looks the way it does. |
 
 ## Building
@@ -95,6 +97,46 @@ currently match.
 
 `check_floats.py` allows two figures to sit behind the bibliography by design;
 see `move_to_appendix.py` for why.
+
+## The .docx
+
+`python build_docx.py` produces `docx/main.docx` and checks it.
+
+Word cannot reproduce TeX's typesetting, and the build does not pretend
+otherwise: line breaks, justification and hyphenation differ, and the
+line-number ruler has no Word equivalent. What is reproduced is everything a
+reader or a submission form measures, taken from the compiled PDF rather than
+guessed: 8.5x11in, 1.5in side margins giving the venue's 5.5in measure, the
+running head 0.386in from the top, body top 1.171in, Times New Roman 10pt on
+11pt, 12pt small-caps sections.
+
+Two substitutions are forced by the format. Figures point at the PNGs, because
+Word will not render a PDF image; they come from the same generator and the
+same data. Citations are resolved by citeproc rather than the venue's `.bst`,
+which Word cannot run, in the same author-year style.
+
+Three things pandoc gets wrong because it does not execute the style file, all
+repaired in `postprocess()` and each checked afterwards:
+
+* `\maketitle` and `	hanks` reach the document as a paragraph reading
+  "maketitle thanks aketitle".
+* `--number-sections` numbers the run-in headings as "1.0.0.1 Research
+  objective."; the venue leaves them unnumbered.
+* The author block is the one in the source. In the PDF the style file
+  replaces it with the double-blind notice, and the two must agree, or the
+  .docx is the less anonymous of the pair.
+
+`verify_docx.py` checks page setup against the PDF's measurements, then
+content parity (every section heading, all three tables, all seven figures in
+a raster format, every number in Tables 1-3), then breakage (unresolved
+citations or cross-references, leftover LaTeX, the three repairs above, and
+word count against the PDF). 22 checks, all passing.
+
+One trap worth naming: `python-docx` reads `w:t` runs only, so every number
+the converter set as an equation reads as an empty string. The first pass
+reported four table values as missing when all four were present as OMML.
+`verify_docx.py` parses the XML for `m:t` as well, and folds the Unicode minus
+to ASCII before comparing.
 
 ## Regenerating the figures
 
