@@ -15,3 +15,10 @@ logs/*.log
 *.egg-info/
 .DS_Store
 .coverage
+
+# Paper build products. The PDF is regenerable from main.tex plus figs/.
+paper/iclr2027/out/
+paper/iclr2027/preview/
+paper/iclr2027/__pycache__/
+paper/iclr2027/docx/reference.docx
+paper/iclr2027/docx/main_docx.tex

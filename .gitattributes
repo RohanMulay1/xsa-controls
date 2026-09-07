@@ -1,0 +1,11 @@
+
+# Vendored verbatim from github.com/ICLR/Master-Template. verify_format.py
+# hashes these against upstream, so git must not rewrite their line endings
+# on checkout or the check fails on a fresh clone for no real reason.
+paper/iclr2027/iclr2027_conference.sty -text
+paper/iclr2027/iclr2027_conference.bst -text
+paper/iclr2027/fancyhdr.sty            -text
+paper/iclr2027/natbib.sty              -text
+paper/iclr2027/math_commands.tex       -text
+paper/iclr2027/legacy/*.sty            -text
+paper/iclr2027/legacy/*.bst            -text

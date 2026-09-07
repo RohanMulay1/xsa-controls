@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import csv
 import math
+import os
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
 
@@ -61,6 +63,18 @@ PR264_MEASURED_DELTA = -0.00076
 XSA_TESTED_RANGE = (0.7e9, 2.7e9)
 
 
+#: Figures carry their own "Figure N ..." banner in the report PDF, where the
+#: caption may be several screens away. In a paper the caption sits under the
+#: image and the banner duplicates it, so set XSAC_FIGURE_TITLES=0 to drop it.
+EMBED_FIGURE_TITLES = os.environ.get("XSAC_FIGURE_TITLES", "1") != "0"
+
+
+def _suptitle(fig, text, **kwargs):
+    """Draw the in-figure banner, unless it has been switched off."""
+    if EMBED_FIGURE_TITLES:
+        fig.suptitle(text, **kwargs)
+
+
 class FigureSkipped(Exception):
     """Raised when a figure's inputs are absent. Never draw a placeholder."""
 
@@ -68,6 +82,11 @@ class FigureSkipped(Exception):
 def _style(ax, xlabel: str, ylabel: str, title: str) -> None:
     ax.set_xlabel(xlabel, fontsize=9.5, color=INK_SECONDARY)
     ax.set_ylabel(ylabel, fontsize=9.5, color=INK_SECONDARY)
+    # Panel labels (an arm name, a model name) stay in every mode; only the
+    # "Figure N ..." banner is dropped, because in a paper the caption below
+    # the image already carries it.
+    if not EMBED_FIGURE_TITLES and re.match(r"Figure\s+\d", title or ""):
+        title = ""
     ax.set_title(title, fontsize=11, color=INK, pad=12, loc="left")
     ax.grid(True, color=GRID, linewidth=0.8, alpha=0.9)
     ax.set_axisbelow(True)
@@ -196,7 +215,7 @@ def fig1_gates(results: Path, out_dir: Path) -> List[Path]:
         ax.legend(frameon=False, fontsize=8)
     n = len({(r["arm"], r["seed"]) for r in gated})
     # The budget goes in the title, not a caption someone may not read.
-    fig.suptitle("Figure 1  Learned gate per layer and head  (n = {} runs, {})"
+    _suptitle(fig, "Figure 1  Learned gate per layer and head  (n = {} runs, {})"
                  .format(n, source_label), fontsize=11, x=0.02, ha="left")
     if from_pilot:
         fig.text(0.02, -0.02, "UNDERPOWERED PILOT: 5e7 tokens per run, "
@@ -257,7 +276,7 @@ def fig2_paired_delta(results: Path, out_dir: Path) -> List[Path]:
                else "CFG_{}".format(size))
     ns = ",".join(str(r.get("n_seeds", "?")) for _, rows in frames
                   for r in rows[:1])
-    fig.suptitle("Figure 2  Paired delta loss, 95% CI  (n = {} seeds)"
+    _suptitle(fig, "Figure 2  Paired delta loss, 95% CI  (n = {} seeds)"
                  .format(ns), fontsize=11, x=0.02, ha="left")
     if from_pilot:
         fig.text(0.02, -0.02, "UNDERPOWERED PILOT: 5e7 tokens per run, "
@@ -478,7 +497,7 @@ def fig6_a2_scatter(results: Path, out_dir: Path) -> List[Path]:
                model.split("/")[-1])
         rows_out.extend(mine)
 
-    fig.suptitle("Figure 6  A2: motivating statistic vs measured effect",
+    _suptitle(fig, "Figure 6  A2: motivating statistic vs measured effect",
                  fontsize=11, y=1.02)
     return _save(fig, out_dir, "fig6_a2_scatter", rows_out)
 

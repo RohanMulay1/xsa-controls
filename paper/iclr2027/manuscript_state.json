@@ -1,0 +1,245 @@
+{
+  "project": "XSA controls conference draft",
+  "lifecycle_stage": "evidence-backed revision and final prose audit",
+  "baseline_commit": "5bf97be60b3336cee5d75ec51e242e762e861674",
+  "baseline_source_sha256": "ada1d5c2f1cf1d224851daaa92fecab6858f4f973719b2f700c676ec9ce44e4f",
+  "baseline_pdf_sha256": "24f3540e80c1c4b3789e2d8f624b5c3d3fccce77e68a89be264037e705f47600",
+  "bibliography_sha256": "e86c78a5979ef31ecc458c46666378a9ab2a96d27cf81330bc623e40fa064619",
+  "artifacts": [
+    {
+      "id": "paper",
+      "path": "main.tex",
+      "status": "ACTIVE",
+      "role": "manuscript"
+    }
+  ],
+  "authority": [
+    "Archived result CSV/JSON files for measured values and run membership",
+    "Implementation code for operational method definitions",
+    "Primary publications for attributed external claims",
+    "Current manuscript, with evidence-required corrections authorised by user",
+    "Historical summaries and manifest are secondary and may be stale"
+  ],
+  "contract": {
+    "task": "Evaluate own-value geometry, measurement reliability, and intervention effects",
+    "scope": "Revise main.tex and rebuild PDF; preserve existing citations, bibliography, equations, and recorded results",
+    "nonclaims": [
+      "universal redundancy",
+      "norm-matched removal",
+      "equivalence from nonsignificance",
+      "significant between-arm difference from separate baseline tests",
+      "latent pooled correlation recovered by half-sample disattenuation",
+      "exhaustive plagiarism clearance"
+    ]
+  },
+  "semantic_locks": [
+    {
+      "id": "xsa_direction",
+      "kind": "SEMANTIC",
+      "canonical": "Negative arm-minus-baseline loss indicates improvement; the archived XSA contrast is negative",
+      "forbidden_variants": [
+        "XSA raises loss",
+        "self-directed removal costs",
+        "load-bearing"
+      ]
+    },
+    {
+      "id": "random_direction",
+      "kind": "SEMANTIC",
+      "canonical": "Random direction is fixed per layer and head across positions, steps, and seeds",
+      "forbidden_variants": [
+        "resampled per position",
+        "fresh uniform unit vector"
+      ]
+    },
+    {
+      "id": "inference",
+      "kind": "SEMANTIC",
+      "canonical": "Describe associations, uncertainty, and scope without converting them to equivalence or explained variance",
+      "forbidden_variants": [
+        "explains under ten percent",
+        "carries no signal",
+        "indistinguishable from baseline"
+      ]
+    }
+  ],
+  "terminology": [
+    {
+      "id": "structural_statistic",
+      "preferred": "self-cosine"
+    },
+    {
+      "id": "null_adjustment",
+      "preferred": "excess"
+    },
+    {
+      "id": "effect",
+      "preferred": "behavioural effect",
+      "prohibited": [
+        "behavioral effect"
+      ]
+    },
+    {
+      "id": "paired_design",
+      "preferred": "paired seeds"
+    }
+  ],
+  "style_profile": {
+    "language": "British English",
+    "discouraged_phrases": [
+      "leverage",
+      "delve",
+      "pivotal",
+      "paramount",
+      "seamless",
+      "holistic",
+      "groundbreaking",
+      "unprecedented",
+      "which is to say",
+      "the wider point",
+      "easy to miss",
+      "easy to get wrong",
+      "same thing from the other side"
+    ],
+    "protected_terms": [
+      "self-cosine",
+      "excess",
+      "self-directed",
+      "own-value",
+      "rank-one",
+      "split-half",
+      "Spearman",
+      "Holm",
+      "GPT-2",
+      "Pythia",
+      "XSA"
+    ],
+    "allowed_repetitions": [
+      "validation loss",
+      "behavioural effect",
+      "structural statistic",
+      "paired seeds",
+      "arbitrary direction",
+      "arbitrary-direction",
+      "earlier-position null",
+      "reliability",
+      "head",
+      "value",
+      "correlation",
+      "layer"
+    ],
+    "hyphenated_token_threshold": 4,
+    "phrase_words": 5,
+    "phrase_min_occurrences": 3,
+    "sentence_opening_words": 4
+  },
+  "facts": [
+    {
+      "id": "xsa_delta",
+      "value": -0.002923833420042099,
+      "source_id": "results/paired_tests_s.csv",
+      "expected_strings": [
+        "-0.002924"
+      ]
+    },
+    {
+      "id": "random_delta",
+      "value": 0.0010564744350363142,
+      "source_id": "results/paired_tests_s.csv",
+      "expected_strings": [
+        "+0.001056"
+      ]
+    },
+    {
+      "id": "tokens",
+      "value": 399900672,
+      "source_id": "results/factorial_s.csv",
+      "expected_strings": [
+        "399\\,900\\,672"
+      ]
+    }
+  ],
+  "alignment": [
+    {
+      "question": "Is the intervention effect reliably measurable?",
+      "method": "Check 0",
+      "evidence": "results/reliability.csv",
+      "answer": "GPT-2 reliable, Pythia-160M and Pythia-410M attenuated",
+      "boundary": "Only three models; half-sample reliabilities"
+    },
+    {
+      "question": "How much own-value alignment exceeds a causal null?",
+      "method": "Check 1",
+      "evidence": "results/ladder.csv and results/gqa.csv",
+      "answer": "Positive excess; group dependence",
+      "boundary": "Descriptive model comparisons, unverified reliability outside three models"
+    },
+    {
+      "question": "Does learned removal improve loss?",
+      "method": "Check 2",
+      "evidence": "results/paired_tests_s.csv",
+      "answer": "XSA improves over baseline; random not detectable",
+      "boundary": "Small trained model; no new direct between-arm test"
+    }
+  ],
+  "decisions": [
+    "User authorised evidence-backed correction of contradicted scientific claims",
+    "Keep research code, archived results, and figure artwork unchanged",
+    "Use linked primary-source attribution without changing existing bibliography entries",
+    "Use raw correlations as primary descriptive evidence and qualify disattenuation",
+    "Retain natural technical hyphens but prohibit rendered em dashes",
+    "Record rather than conceal source and calibration limitations"
+  ],
+  "open_issues": [
+    {
+      "id": "external_017",
+      "severity": "S3",
+      "status": "OPEN",
+      "description": "Exact source configuration for the figure's external -0.017 line is not documented; caption discloses this"
+    },
+    {
+      "id": "gpt2_reference",
+      "severity": "S3",
+      "status": "OPEN",
+      "description": "Archived GPT-2 target reproduction fails; reported in Limitations"
+    },
+    {
+      "id": "registration",
+      "severity": "S2",
+      "status": "OPEN",
+      "description": "No separate timestamped registration located; use protocol-specified instead of pre-registered"
+    },
+    {
+      "id": "half_vs_pooled",
+      "severity": "S2",
+      "status": "OPEN",
+      "description": "Archived disattenuation uses half-sample reliabilities with pooled correlations; estimates retained and qualified"
+    },
+    {
+      "id": "plot_statistic",
+      "severity": "S2",
+      "status": "OPEN",
+      "description": "Existing scatter points use half-A self-cosine, panel correlations use pooled statistics; caption makes the distinction explicit"
+    }
+  ],
+  "required_checks": [
+    "protected-content diff",
+    "numeric table audit",
+    "citation-key reconciliation",
+    "exact-candidate prose audit",
+    "build",
+    "geometry",
+    "float placement",
+    "all-page visual inspection",
+    "final hashes"
+  ],
+  "release_status": "EDITED_WITH_DISCLOSED_RESEARCH_LIMITS",
+  "revision_audit": "revision_audit.md",
+  "final_checks": "revision_checks.json",
+  "final_source_sha256": "116bb151bb21f0224c978a3c46310af96770480c0a920a0e1fa73115ce367ae9",
+  "final_pdf_sha256": "439817f397d68a66142370c1fcb0ae5bf3c684cec25d0695ef34068adaa6989e",
+  "authorised_bib_additions": [
+    "zhai2026xsa"
+  ],
+  "bibliography_note": "The baseline invariant was a byte-identical bibliography. The authors authorised one addition, zhai2026xsa, so the audit now checks that no baseline citation was dropped, that every baseline entry is unchanged, and that the only new key is the authorised one."
+}

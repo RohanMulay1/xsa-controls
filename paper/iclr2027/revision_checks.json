@@ -1,0 +1,393 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "existing citation-key set preserved",
+      "passed": true
+    },
+    {
+      "check": "every citation resolves",
+      "passed": true
+    },
+    {
+      "check": "bibliography byte-for-byte preserved",
+      "passed": true
+    },
+    {
+      "check": "all labelled equation bodies preserved",
+      "passed": true
+    },
+    {
+      "check": "all labels preserved",
+      "passed": true
+    },
+    {
+      "check": "all cross-references resolve",
+      "passed": true
+    },
+    {
+      "check": "all numerical table content preserved",
+      "passed": true
+    },
+    {
+      "check": "author comments preserved",
+      "passed": true
+    },
+    {
+      "check": "no rendered em-dash source forms",
+      "passed": true
+    },
+    {
+      "check": "no unresolved editorial markers",
+      "passed": true
+    },
+    {
+      "check": "balanced braces",
+      "passed": true
+    },
+    {
+      "check": "random mean_delta matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random ci_low matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random ci_high matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random t matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random cohen_dz matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random sd_paired matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random p matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "random MDE matches archived SD and n",
+      "passed": true
+    },
+    {
+      "check": "xsa mean_delta matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa ci_low matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa ci_high matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa t matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa cohen_dz matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa sd_paired matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa p matches archived summary",
+      "passed": true
+    },
+    {
+      "check": "xsa MDE matches archived SD and n",
+      "passed": true
+    },
+    {
+      "check": "24 complete cells at the reported token budget",
+      "passed": true
+    },
+    {
+      "check": "random mean and sign agree with per-seed losses",
+      "passed": true
+    },
+    {
+      "check": "xsa mean and sign agree with per-seed losses",
+      "passed": true
+    },
+    {
+      "check": "gpt2 r_delta matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "gpt2 r_stat matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "gpt2 ceiling matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m r_delta matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m r_stat matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m ceiling matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m r_delta matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m r_stat matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m ceiling matches Table 1",
+      "passed": true
+    },
+    {
+      "check": "gpt2 cos_self rho_raw matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "gpt2 cos_self ceiling matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "gpt2 cos_self rho_disattenuated matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "gpt2 excess rho_raw matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "gpt2 excess ceiling matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "gpt2 excess rho_disattenuated matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m cos_self rho_raw matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m cos_self ceiling matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m cos_self rho_disattenuated matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m excess rho_raw matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m excess ceiling matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m excess rho_disattenuated matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m cos_self rho_raw matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m cos_self ceiling matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m cos_self rho_disattenuated matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m excess rho_raw matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m excess ceiling matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m excess rho_disattenuated matches Table 2",
+      "passed": true
+    },
+    {
+      "check": "gpt2 cos_self pooled raw correlation reproduces",
+      "passed": true
+    },
+    {
+      "check": "gpt2 excess pooled raw correlation reproduces",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m cos_self pooled raw correlation reproduces",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-160m excess pooled raw correlation reproduces",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m cos_self pooled raw correlation reproduces",
+      "passed": true
+    },
+    {
+      "check": "EleutherAI/pythia-410m excess pooled raw correlation reproduces",
+      "passed": true
+    }
+  ],
+  "source_sha256": "116bb151bb21f0224c978a3c46310af96770480c0a920a0e1fa73115ce367ae9",
+  "pdf_sha256": "439817f397d68a66142370c1fcb0ae5bf3c684cec25d0695ef34068adaa6989e",
+  "prose_projection_sha256": "4ce1f98b2208ddae48780fc381622239fd13cfac1836c4c62e25b4a55d358579",
+  "approximate_prose_words": {
+    "baseline": 3931,
+    "revised": 3605
+  },
+  "uncited_existing_bib_keys": [
+    "efron1979bootstrap",
+    "hoffmann2022training",
+    "spearman1904proof"
+  ],
+  "raw_source_profile_findings": [],
+  "candidate_prose_findings": [],
+  "baseline_prose_findings": [
+    {
+      "code": "LOCK002",
+      "lock": "xsa_direction",
+      "artifact": "baseline prose projection",
+      "match": "self-directed removal costs",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "LOCK002",
+      "lock": "xsa_direction",
+      "artifact": "baseline prose projection",
+      "match": "load-bearing",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "LOCK002",
+      "lock": "random_direction",
+      "artifact": "baseline prose projection",
+      "match": "resampled per position",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "LOCK002",
+      "lock": "random_direction",
+      "artifact": "baseline prose projection",
+      "match": "fresh uniform unit vector",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "LOCK002",
+      "lock": "inference",
+      "artifact": "baseline prose projection",
+      "match": "explains under ten percent",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "LOCK002",
+      "lock": "inference",
+      "artifact": "baseline prose projection",
+      "match": "carries no signal",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "LOCK002",
+      "lock": "inference",
+      "artifact": "baseline prose projection",
+      "match": "indistinguishable from baseline",
+      "message": "forbidden semantic variant found in candidate text"
+    },
+    {
+      "code": "PROSE010",
+      "artifact": "baseline prose projection",
+      "match": "split-half, self-directed, self-directed, rank-one",
+      "count": 4,
+      "message": "dense lexical hyphenation in one sentence; inspect clarity and field convention"
+    },
+    {
+      "code": "PROSE010",
+      "artifact": "baseline prose projection",
+      "match": "eight-seed, pre-registered, arbitrary-direction, self-directed, Holm-corrected",
+      "count": 5,
+      "message": "dense lexical hyphenation in one sentence; inspect clarity and field convention"
+    },
+    {
+      "code": "PROSE010",
+      "artifact": "baseline prose projection",
+      "match": "eight-seed, pre-registered, arbitrary-direction, self-directed",
+      "count": 4,
+      "message": "dense lexical hyphenation in one sentence; inspect clarity and field convention"
+    },
+    {
+      "code": "PROSE010",
+      "artifact": "baseline prose projection",
+      "match": "self-directed, load-bearing, arbitrary-direction, rank-one",
+      "count": 4,
+      "message": "dense lexical hyphenation in one sentence; inspect clarity and field convention"
+    },
+    {
+      "code": "PROSE003",
+      "artifact": "baseline prose projection",
+      "match": "easy to get wrong",
+      "count": 1,
+      "message": "stock or project-discouraged phrase; inspect in context"
+    },
+    {
+      "code": "PROSE003",
+      "artifact": "baseline prose projection",
+      "match": "easy to miss",
+      "count": 1,
+      "message": "stock or project-discouraged phrase; inspect in context"
+    },
+    {
+      "code": "PROSE003",
+      "artifact": "baseline prose projection",
+      "match": "same thing from the other side",
+      "count": 1,
+      "message": "stock or project-discouraged phrase; inspect in context"
+    },
+    {
+      "code": "PROSE003",
+      "artifact": "baseline prose projection",
+      "match": "the wider point",
+      "count": 1,
+      "message": "stock or project-discouraged phrase; inspect in context"
+    },
+    {
+      "code": "PROSE003",
+      "artifact": "baseline prose projection",
+      "match": "which is to say",
+      "count": 1,
+      "message": "stock or project-discouraged phrase; inspect in context"
+    }
+  ],
+  "framework_script_sha256": {
+    "audit_candidate_text.py": "c404197eb30be6292be51ef6d2b63e6b3da4ea1d705361030d8aa1be09cf7acb",
+    "audit_prose_patterns.py": "9dab3d389b4165cff8a068ecf146fe8b5e3ce227277365a97dad1290db42e30d",
+    "audit_text_consistency.py": "90034c11a814982657d95a07ca93d2721517b5ba44de81e9adbfc30e2c358351",
+    "verify_paper.py": "8948beea91c9a8d2a11e91b5acf65739dd31bc1530def6e0cfd12d47651adf9f"
+  },
+  "pdf_pages": 7,
+  "rendered_em_dash_count": 0
+}
