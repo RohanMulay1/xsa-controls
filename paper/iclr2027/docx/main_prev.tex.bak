@@ -93,9 +93,8 @@ Our protocol addresses these questions in the following order.
 interpreted, we estimate the split-half reliability $r_\Delta$ of the
 behavioural effect and $r_{\text{stat}}$ of the structural statistic. Their
 geometric mean $\sqrt{r_\Delta r_{\text{stat}}}$ provides an attenuation
-diagnostic. We classify the effect as reliable at $r_\Delta \ge 0.6$,
-attenuated at $0.3 \le r_\Delta < 0.6$, and unresolvable below $0.3$; the
-classification does not use the geometric mean as its threshold.
+diagnostic. We classify the effect as unresolvable when $r_\Delta$ is below
+$0.3$; the classification does not use the geometric mean as its threshold.
 
 \paragraph{Check 1: is the self-directed cosine anisotropy?} We compare
 $\cos(\yv_i, \mathbf{v}_i)$ against the same cosine computed with a null
@@ -135,20 +134,6 @@ anisotropy in contextual representations from ELMo, BERT, and GPT-2. This
 motivates a geometric control; it does not establish the geometry of every
 head examined here. Check~1 measures that background using values from
 earlier positions in the same sequence.
-
-\paragraph{Isotropy is not universal.} \citet{timkey2021bark} show that a
-small number of high-variance coordinates dominate cosine similarity in
-contextual spaces, so a raw cosine can be large without reflecting shared
-structure. \citet{machina2024anisotropy} further report that the large Pythia
-models have approximately isotropic embedding spaces, which bounds how much a
-generic anisotropy argument can explain. Our null is computed within the same
-run, at one stated sequence length, on the same documents as the observed
-statistic, so it measures the earlier-position background of each model
-directly rather than assuming a uniform anisotropy across the ladder.
-%% AUTHOR CHECK: your README argues the ladder answers this directly (a large
-%% share of cos(y_i, v_i) remains attributable to the null even at 6.9B).
-%% That quantified rebuttal is currently absent from the paper. Verify the
-%% figure against results/ and add it here if it holds.
 
 \paragraph{Grouped-query attention.} \citet{ainslie2023gqa} share key and value
 projections across groups of query heads. We compare own-group and
@@ -591,7 +576,7 @@ across studies: the same GPT-2 gives $0.235$ at $64$ tokens and $0.412$ at
 $1024$. We therefore report the length everywhere and do not claim
 reproduction of the reference triple.
 
-\section{Conclusion}
+\section{Research Conclusion}
 
 Learned self-directed removal improves validation loss by $0.0029$ nats in
 the eight-seed factorial, with Holm-corrected $p = 0.0023$. The fixed
@@ -605,7 +590,39 @@ with intervention effects varies across models. Excess has modest rank
 correlations in all three examined. Interpreting such associations requires
 reliable effect measurements as well as a control suited to the intervention.
 
-\subsection*{AI use statement}
+\section*{Reproducibility Statement}
+
+The repository contains per-run factorial records, paired-test summaries,
+per-head geometry and intervention measurements, and revision hashes for all
+twelve pretrained models. Code for the intervention, null sampling,
+reconstruction gate, and statistical calculations accompanies the results.
+The pilot runs are stored apart from the primary factorial and are labelled
+as such.
+
+Every figure is generated from these stored results. The tables are written by
+hand, so a checker recomputes each of their 48 cells from the archived result
+files and compares against the printed value at the precision shown. Cells
+that the manuscript derives are recomputed rather than read back:
+$\rho_{\max}$ from its two reliabilities, $\rho_{\text{disatt}}$ from the raw
+correlation and that factor, and the realised MDE from the observed paired
+standard deviation and seed count. Tables 1--3 currently agree with their
+sources on all 48 cells. The checker also reports any table row it does not
+know how to verify, so an unchecked row cannot pass silently.
+
+Separately, a manifest recomputes 31 numerical claims from the committed
+artifacts and fails on any that does not reproduce within a stated tolerance.
+All 31 reproduce at the commit this manuscript was built from.
+
+\section*{Ethics Statement}
+
+This work analyses the internal structure of publicly released pretrained
+language models and trains small models from scratch on public text. It
+introduces no new data collection, no human subjects, and no deployed system.
+The small-model training result does not establish that attention components
+can be pruned safely in deployed models. Any such use requires evaluation in
+the intended model and setting.
+
+\section*{AI Assistance}
 
 AI assistants were used during the development of this work. The authors
 defined the research question, experimental design, methodological choices, and
@@ -618,13 +635,8 @@ paper. Use by category:
 \setlength{\itemsep}{2pt}
 \item \textbf{Synthetic data.} None. All text is public corpora; no generated
 data enters any result.
-\item \textbf{Hypotheses.} Author-defined. The research question, the
-three checks, and the pre-registered primary endpoint were specified by the
-authors before any assistant was involved in the experimental programme.
-%% AUTHOR CHECK: confirm this is accurate before submitting.
-\item \textbf{Theory, proofs, and conceptual frameworks.} None. The paper
-contains no theorem or proof, and the conceptual framing of the three checks
-is author-originated.
+\item \textbf{Theory and proofs.} None. The paper contains no theorem or
+proof.
 \item \textbf{Methodology and experiment design.} Author-defined. Assistants
 enumerated candidate controls and failure modes and drafted the power and
 token-budget arithmetic, which the authors reviewed before adoption.
@@ -645,49 +657,7 @@ from the stored result files. No figure content was drawn or edited by hand.
 help and revised by the authors, who also used assistants to check the draft
 against the archived results and the cited sources.
 \item \textbf{Translation.} None. The work was written in English throughout.
-\item \textbf{Literature search, references, and structure.} Assistants were
-used for literature search and summarisation, reference formatting, and
-suggestions on section structure and title wording. The authors verified every
-cited work against its original source.
-%% AUTHOR CHECK: these are recommended-disclosure tasks. Amend to match what
-%% actually happened; delete any that did not.
 \end{itemize}
-
-\subsection*{Ethics statement}
-
-This work analyses the internal structure of publicly released pretrained
-language models and trains small models from scratch on public text. It
-introduces no new data collection, no human subjects, and no deployed system.
-The small-model training result does not establish that attention components
-can be pruned safely in deployed models. Any such use requires evaluation in
-the intended model and setting.
-
-\subsection*{Reproducibility statement}
-
-The repository contains per-run factorial records, paired-test summaries,
-per-head geometry and intervention measurements, and revision hashes for all
-twelve pretrained models. Code for the intervention, null sampling,
-reconstruction gate, and statistical calculations accompanies the results.
-The pilot runs are stored apart from the primary factorial and are labelled
-as such. An anonymised copy of the repository is available at
-\url{ANONYMOUS-ARTIFACT-URL}.
-%% AUTHOR ACTION: replace with an anonymous.4open.science mirror, or upload the
-%% code as supplementary material. Do NOT paste the GitHub URL: it contains
-%% your username and breaks double-blind review.
-
-Every figure is generated from these stored results. The tables are written by
-hand, so a checker recomputes each of their 48 cells from the archived result
-files and compares against the printed value at the precision shown. Cells
-that the manuscript derives are recomputed rather than read back:
-$\rho_{\max}$ from its two reliabilities, $\rho_{\text{disatt}}$ from the raw
-correlation and that factor, and the realised MDE from the observed paired
-standard deviation and seed count. Tables 1--3 currently agree with their
-sources on all 48 cells. The checker also reports any table row it does not
-know how to verify, so an unchecked row cannot pass silently.
-
-Separately, a manifest recomputes 31 numerical claims from the committed
-artifacts and fails on any that does not reproduce within a stated tolerance.
-All 31 reproduce at the commit this manuscript was built from.
 
 \bibliographystyle{iclr2027_conference}
 \bibliography{references}

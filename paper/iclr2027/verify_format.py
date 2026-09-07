@@ -222,6 +222,31 @@ def size_inventory(doc):
     return sizes
 
 
+# The template says of each of these, verbatim, that it "does not count toward
+# the page limit": the AI use statement is required, the other two are
+# recommended. So the counted text ends at whichever appears first, and the
+# references and appendix that follow are excluded as well.
+UNCOUNTED_HEADINGS = ("AI USE STATEMENT", "ETHICS STATEMENT",
+                      "REPRODUCIBILITY STATEMENT", "REFERENCES")
+
+
+def main_text_end(doc):
+    """The page the counted text ends on, and what ends it.
+
+    Searching for the word "references" instead of the heading gets this
+    wrong: it matches prose a page early. Searching only for the references
+    heading gets it wrong the other way, by counting three statements the
+    template excludes by name.
+    """
+    for pno, page in enumerate(doc, 1):
+        for _y, size, text in _page_lines(page):
+            label = text.strip().upper()
+            if label in UNCOUNTED_HEADINGS and size in (
+                    SECTION_SIZE,) + BODY_SIZES:
+                return pno, label.lower()
+    return None, None
+
+
 def style_integrity():
     """The strongest check available: the format is the venue's if the files
     that define it are the venue's, byte for byte."""
@@ -273,18 +298,14 @@ def main(draft_path, template_path):
 
     # The page limit is a formatting rule, so it is checked here rather than
     # left to be noticed. References and anything after them are uncounted.
-    refs_page = None
-    for pno, page in enumerate(draft, 1):
-        if "REFERENCES" in page.get_text().upper():
-            refs_page = pno
-            break
-    if refs_page is None:
-        print("\ncould not locate the references; page limit unchecked")
+    end_page, ended_by = main_text_end(draft)
+    if end_page is None:
+        print("\ncould not locate the end of the main text; limit unchecked")
     else:
-        over = refs_page > MAIN_TEXT_PAGE_LIMIT
+        over = end_page > MAIN_TEXT_PAGE_LIMIT
         print("\nmain text ends on page %d of a %d page limit "
-              "(references start there; %d pages total)%s"
-              % (refs_page, MAIN_TEXT_PAGE_LIMIT, draft.page_count,
+              "(%s begins there; %d pages total)%s"
+              % (end_page, MAIN_TEXT_PAGE_LIMIT, ended_by, draft.page_count,
                  "  <-- OVER LIMIT" if over else ""))
         if over:
             bad.append("page_limit")

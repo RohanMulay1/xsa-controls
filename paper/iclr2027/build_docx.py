@@ -64,19 +64,116 @@ TITLE_PT = 17.28
 FONT = "Times New Roman"
 
 
+NEWLABEL = re.compile(r"\\newlabel\{([^}]+)\}\{\{([^}]*)\}\{([^}]*)\}")
+
+
+def label_numbers():
+    """label -> the number LaTeX assigned it, read from out/main.aux.
+
+    pandoc has no cross-reference resolver, so it renders \\ref{eq:ceiling} as
+    the literal "[eq:ceiling]". The numbers exist already: the LaTeX build
+    writes them to the aux file. Reading them there keeps the two documents
+    saying the same thing without a second numbering scheme.
+    """
+    aux = HERE / "out" / "main.aux"
+    if not aux.exists():
+        print("  no out/main.aux; build the PDF first or references stay raw")
+        return {}
+    labels = {}
+    for key, number, _page in NEWLABEL.findall(
+            aux.read_text(encoding="utf-8", errors="replace")):
+        if key not in labels and number:
+            labels[key] = number
+    return labels
+
+
+def _brace_group(text, open_index):
+    """Index just past the group that opens at `open_index`.
+
+    A regex cannot do this. Captions here nest two deep, as in
+    `$\\rho_{\\max}$`, and a pattern allowing one level of nesting silently
+    skipped two of the three table captions while appearing to work.
+    """
+    depth = 0
+    for i in range(open_index, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+    raise ValueError("unbalanced braces from index %d" % open_index)
+
+
+def number_captions(text, labels):
+    """Prefix each caption with the number LaTeX gave its float.
+
+    The float environment adds "Figure N:" on its own; pandoc emits the
+    caption body alone, so the two documents would number differently or not
+    at all.
+    """
+    out = []
+    count = 0
+    pos = 0
+    caption = "\\caption{"
+    while True:
+        start = text.find(caption, pos)
+        if start < 0:
+            out.append(text[pos:])
+            break
+        body_open = start + len(caption) - 1
+        body_end = _brace_group(text, body_open)
+        body = text[body_open + 1:body_end - 1]
+
+        after = text[body_end:body_end + 200]
+        match = re.match(r"\s*\\label\{([^}]+)\}", after)
+        number = labels.get(match.group(1)) if match else None
+        kind = "Table" if text.rfind("\\begin{table}", 0, start) > \
+            text.rfind("\\begin{figure}", 0, start) else "Figure"
+
+        out.append(text[pos:start])
+        if number:
+            out.append("\\caption{\\textbf{%s %s:} %s}" % (kind, number, body))
+            count += 1
+        else:
+            out.append(text[start:body_end])
+        pos = body_end
+    return "".join(out), count
+
+
 def prepare_source():
-    """Copy main.tex with the figure extensions swapped to png."""
+    """main.tex, with the three changes the converter needs.
+
+    Figures point at the PNGs, cross-references are resolved to the numbers
+    LaTeX assigned, and captions get the "Figure N:" prefix that the LaTeX
+    float environment adds automatically and pandoc does not.
+    """
     WORK.mkdir(exist_ok=True)
     text = (HERE / "main.tex").read_text(encoding="utf-8")
-    n = 0
+
+    figures = 0
     for stem in sorted(p.stem for p in (HERE / "figs").glob("*.pdf")):
         old = "{figs/%s.pdf}" % stem
         if old in text:
             text = text.replace(old, "{figs/%s.png}" % stem)
-            n += 1
+            figures += 1
+
+    labels = label_numbers()
+
+    text, captioned = number_captions(text, labels)
+
+    resolved = 0
+    for key, number in labels.items():
+        for macro in ("\\ref{%s}" % key, "\\eqref{%s}" % key):
+            if macro in text:
+                repl = number if macro.startswith("\\ref") else "(%s)" % number
+                text = text.replace(macro, repl)
+                resolved += 1
+
     SOURCE.write_text(text, encoding="utf-8")
-    print("source: %d figure paths switched to png" % n)
-    return n
+    print("source: %d figures to png, %d captions numbered, "
+          "%d cross-references resolved" % (figures, captioned, resolved))
+    return figures
 
 
 def _pt(value):
@@ -103,6 +200,45 @@ def _field(paragraph, instruction):
     for el in (begin, instr, end):
         run._r.append(el)
     return run
+
+
+def _plain_style(style, size_pt, small_caps=False, bold=False):
+    """Force a style to black Times at a given size, theme settings included.
+
+    Setting `style.font.name` alone is not enough. Word's built-in heading and
+    title styles reference the document theme for both font and colour, and a
+    theme reference wins over the style's own value: the first Word render came
+    out in blue Calibri Light headings with a rule under the title, none of
+    which is in this document's design. The theme attributes have to be removed
+    from the style's rPr, not overwritten.
+    """
+    from docx.oxml.ns import qn
+    from docx.shared import Pt, RGBColor
+
+    style.font.name = FONT
+    style.font.size = Pt(size_pt)
+    style.font.bold = bold
+    style.font.italic = False
+    style.font.small_caps = small_caps
+    style.font.color.rgb = RGBColor(0, 0, 0)
+
+    rpr = style.element.get_or_add_rPr()
+    fonts = rpr.find(qn("w:rFonts"))
+    if fonts is None:
+        fonts = rpr.makeelement(qn("w:rFonts"), {})
+        rpr.append(fonts)
+    for attr in ("asciiTheme", "hAnsiTheme", "eastAsiaTheme", "cstheme"):
+        if fonts.get(qn("w:" + attr)) is not None:
+            del fonts.attrib[qn("w:" + attr)]
+    for attr in ("ascii", "hAnsi", "cs"):
+        fonts.set(qn("w:" + attr), FONT)
+
+    # Built-in Title carries a bottom border; nothing in this format does.
+    ppr = style.element.find(qn("w:pPr"))
+    if ppr is not None:
+        borders = ppr.find(qn("w:pBdr"))
+        if borders is not None:
+            ppr.remove(borders)
 
 
 def build_reference():
@@ -148,21 +284,17 @@ def build_reference():
     normal.paragraph_format.space_after = Pt(6)
     normal.paragraph_format.space_before = Pt(0)
 
-    # The venue sets headings in small caps at 12pt and 10pt, not bold.
-    for name, size, caps in (("Heading 1", SECTION_PT, True),
-                             ("Heading 2", SUBSECTION_PT, True),
-                             ("Heading 3", SUBSECTION_PT, True),
-                             ("Heading 4", BODY_PT, False)):
+    # The venue sets headings in small caps at 12pt and 10pt, not bold; the
+    # run-in headings at level 4 are bold and not small caps.
+    for name, size, caps, bold in (("Heading 1", SECTION_PT, True, False),
+                                   ("Heading 2", SUBSECTION_PT, True, False),
+                                   ("Heading 3", SUBSECTION_PT, True, False),
+                                   ("Heading 4", BODY_PT, False, True)):
         try:
             style = doc.styles[name]
         except KeyError:
             continue
-        style.font.name = FONT
-        style.font.size = Pt(size)
-        style.font.small_caps = caps
-        style.font.bold = not caps
-        style.font.italic = False
-        style.font.color.rgb = None
+        _plain_style(style, size, small_caps=caps, bold=bold)
         style.paragraph_format.space_before = Pt(12)
         style.paragraph_format.space_after = Pt(6)
         style.paragraph_format.keep_with_next = True
@@ -172,19 +304,15 @@ def build_reference():
             style = doc.styles[name]
         except KeyError:
             continue
-        style.font.name = FONT
-        style.font.size = Pt(size)
-        style.font.bold = False
+        _plain_style(style, size)
         style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    for name in ("Caption", "Author", "Abstract"):
+    for name in ("Caption", "Author", "Abstract", "Body Text"):
         try:
             style = doc.styles[name]
         except KeyError:
             continue
-        style.font.name = FONT
-        style.font.size = Pt(9 if name == "Caption" else BODY_PT)
-        style.font.italic = False
+        _plain_style(style, 9 if name == "Caption" else BODY_PT)
 
     REFERENCE.parent.mkdir(exist_ok=True)
     doc.save(str(REFERENCE))
@@ -275,9 +403,32 @@ def postprocess():
                 run.font.size = Pt(SECTION_PT)
             break
 
+    # An inline image in a paragraph whose line spacing is EXACTLY 11pt is
+    # clipped to 11pt tall. Word drew every figure as a hairline strip of axis
+    # labels until this was fixed. Only the paragraphs holding a drawing are
+    # changed; the body keeps its exact leading.
+    from docx.oxml.ns import qn
+    unclipped = 0
+    for para in doc.paragraphs:
+        if not para._element.findall(".//" + qn("w:drawing")):
+            continue
+        ppr = para._element.get_or_add_pPr()
+        spacing = ppr.find(qn("w:spacing"))
+        if spacing is None:
+            spacing = ppr.makeelement(qn("w:spacing"), {})
+            ppr.append(spacing)
+        # python-docx's line_spacing setters clear the attributes but leave
+        # the empty element behind, and the style's rule then still applies.
+        # These have to be written out.
+        spacing.set(qn("w:lineRule"), "auto")
+        spacing.set(qn("w:line"), "240")
+        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        unclipped += 1
+
     doc.save(str(OUT))
     print("postprocess: removed %d stray paragraph(s), unnumbered %d run-in "
-          "heading(s), replaced the author block" % (removed, renumbered))
+          "heading(s), unclipped %d figure(s), replaced the author block"
+          % (removed, renumbered, unclipped))
 
 
 def main(argv=None):

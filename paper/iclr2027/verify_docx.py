@@ -160,8 +160,20 @@ def content_parity(doc, path, rep):
 
 def breakage(doc, text, rep):
     print("\nbreakage")
-    rep.check("no unresolved cross-references", "??" not in text,
-              "none" if "??" not in text else "found '??'")
+    # pandoc renders an unresolved \ref as the literal "[label]", not as "??".
+    # Checking only for "??" passed a document that said "Equation
+    # [eq:ceiling]" on the page.
+    raw_refs = re.findall(r"\[(?:eq|fig|tab|sec|app):[a-z0-9_]+\]", text)
+    rep.check("no unresolved cross-references",
+              "??" not in text and not raw_refs,
+              "none" if not raw_refs else str(sorted(set(raw_refs))[:4]))
+    # No \b before "Figure": the extracted text has no spaces between block
+    # elements, so a caption following a table reads "...0.00182Figure 1:" and
+    # a word boundary never matches there. That hid one real caption.
+    labelled = len(re.findall(r"(?:Figure|Table) \d+:", text))
+    expected = TEX.read_text(encoding="utf-8").count("\\caption{")
+    rep.check("captions numbered", labelled >= expected,
+              "%d of %d captions carry a number" % (labelled, expected))
     unresolved = re.findall(r"\[CITATION[^\]]*\]|\\cite[a-z]*\{", text)
     rep.check("no unresolved citations", not unresolved,
               "none" if not unresolved else str(unresolved[:3]))
