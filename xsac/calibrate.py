@@ -15,7 +15,7 @@ Procedure, per the spec:
 3. Solve the token budget against the real rate.
 4. Round down to a multiple of ``batch_tokens`` and clamp to [3.5e8, 6e8].
 5. If the clamp forces below 3.5e8, drop the CFG_M scale check first and
-   record the decision, with its arithmetic, in BUDGET.md.
+   record the decision with the experiment results.
 """
 
 from __future__ import annotations

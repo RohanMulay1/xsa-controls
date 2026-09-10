@@ -3,11 +3,11 @@ Resumable factorial orchestrator.
 
     python scripts/run_factorial.py --smoke                  # CPU, seconds
     python scripts/run_factorial.py --size S --seeds 42 1337 --arms baseline random
-    python scripts/run_factorial.py --pilot                  # Day-3 GO/NO-GO
+    python scripts/run_factorial.py --pilot                  # pilot decision
 
 Resumability is free: each cell's filename is a content hash of its config, so
 a completed cell is one whose file exists. Killing and restarting skips what is
-done. That property is checked by ``tests/test_gates.py``.
+done. That property is checked by ``tests/test_data_and_runmeta.py``.
 
 Nothing here ever writes a number for a cell that did not run. A crash is
 recorded with status ``failed`` and its traceback; an OOM with status ``oom``.
@@ -366,8 +366,7 @@ def main(argv=None) -> int:
         print("  MDE          = {}".format(rep["mde"]))
         print("  branch       = {}".format(rep["branch"]))
         print("  action       = {}".format(rep["action"]))
-        print("\nThis decision must be written into BUDGET.md with the MDE "
-              "quoted before any further GPU spend.")
+        print("\nRecord this decision and MDE with the experiment results before continuing.")
 
     n_bad = sum(1 for r in records if not r.is_numeric)
     if n_bad:

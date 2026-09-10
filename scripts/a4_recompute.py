@@ -100,7 +100,7 @@ def solve_n_for_floor(rho: float, target_floor: float) -> float:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", default=str(RESULTS / "xsa_figure1_recompute.txt"))
+    parser.add_argument("--out", help="optional path for a plain-text copy")
     parser.add_argument("--json", default=str(RESULTS / "xsa_figure1_recompute.json"))
     args = parser.parse_args(argv)
 
@@ -205,9 +205,10 @@ def main(argv=None) -> int:
     add("null empirically (Check 1, A1) rather than modelling it.")
 
     text = "\n".join(lines) + "\n"
-    out = Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(text, encoding="utf-8")
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
     print(text)
 
     payload = {

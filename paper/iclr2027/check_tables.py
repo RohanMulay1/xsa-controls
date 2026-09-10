@@ -27,7 +27,6 @@ import csv
 import math
 import pathlib
 import re
-import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 DEFAULT_RESULTS = HERE.parents[1] / "results"
