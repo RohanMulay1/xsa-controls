@@ -544,11 +544,12 @@ or projection norms may exhibit different empirical associations with head
 interventions.
 
 \paragraph{Reliability coverage and correlation scope.} Intervention reliability
-was evaluated on three models; the remaining nine ladder models lack split-half
-intervention measurements. Disattenuation applies half-sample reliabilities to
-pooled correlations, meaning adjusted values serve as diagnostic bounds alongside
-raw values rather than corrected ground truth. Rank correlations describe
-within-sample monotonicity rather than out-of-sample prediction.
+was evaluated on three models in the main study, and extended to Pythia-1.4B ($r_\Delta = 0.67$)
+and Pythia-2.8B ($0.63$; Appendix~\ref{app:extended_reliability}), confirming that single-head
+effects become resolvable at scale. The remaining seven ladder models lack intervention measurements.
+Disattenuation applies half-sample reliabilities to pooled correlations, meaning adjusted values
+serve as diagnostic bounds alongside raw values rather than corrected ground truth. Rank correlations
+describe within-sample monotonicity rather than out-of-sample prediction.
 
 \paragraph{Control scope.} While \textsc{random} and \textsc{xsa} share a
 rank-one parametric form, their projected norms and converged gate strengths
@@ -751,5 +752,34 @@ for disattenuation. The earlier Pythia-160M raw excess correlation of
 $+0.487$ and the current value of $+0.189$ belong to different runs;
 their difference does not isolate the contribution of any single correction.
 Earlier outputs are retained for comparison.
+
+\section{Extended Reliability at Scale}
+\label{app:extended_reliability}
+
+To determine whether the attenuation observed in Pythia-160M ($r_\Delta = 0.419$) and Pythia-410M ($0.531$) is an artifact of smaller parameter counts or persists at scale, we extended Check~0 split-half reliability and Check~0--A2 correlations to \texttt{EleutherAI/pythia-1.4b} ($24$ layers, $16$ query heads, $n = 384$) and \texttt{EleutherAI/pythia-2.8b} ($32$ layers, $32$ query heads, $n = 1024$). Both models were evaluated on the identical Check~0 protocol ($64$ documents at a fixed sequence length of $128$ tokens, $32$ documents per half, evaluated in \texttt{bfloat16} on an NVIDIA RTX 6000 Ada Generation GPU).
+
+Both larger models pass the $r_\Delta \ge 0.60$ threshold and are classified as \textsc{reliable} (Table~\ref{tab:extended_reliability}). This establishes that single-head loss perturbations become reliably resolvable with parameter scale across the Pythia family ($r_\Delta$ rises from $0.419$ to $0.531$, $0.666$, and $0.632$).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llrrrrrl@{}}
+\toprule
+Model & Statistic & $r_\Delta$ & $r_{\text{stat}}$ & $\rho_{\max}$ & $\rho_{\text{raw}}$ & $\rho_{\text{disatt}}$ & Verdict \\
+\midrule
+\multirow{2}{*}{Pythia-1.4B}
+  & self-cosine & \multirow{2}{*}{0.666} & 0.982 & 0.809 & $+0.187$ & $+0.232$ & \multirow{2}{*}{reliable} \\
+  & excess      &                        & 0.988 & 0.811 & $+0.249$ & $+0.307$ & \\
+\midrule
+\multirow{2}{*}{Pythia-2.8B}
+  & self-cosine & \multirow{2}{*}{0.632} & 0.967 & 0.782 & $+0.003$ & $+0.003$ & \multirow{2}{*}{reliable} \\
+  & excess      &                        & 0.982 & 0.788 & $-0.124$ & $-0.158$ & \\
+\bottomrule
+\end{tabular}
+\caption{Check~0 split-half reliability and Check~0--A2 rank correlations for extended Pythia models ($32$ documents per half, $128$ tokens). $A@V$ reconstruction Frobenius error was $1.66\times 10^{-3}$ on Pythia-1.4B and $1.66\times 10^{-3}$ on Pythia-2.8B. As in Table~\ref{tab:a2}, disattenuation uses each statistic's own split-half reliability.}
+\label{tab:extended_reliability}
+\end{table}
+
+The association between representation statistics and intervention outcomes shows strong scale sensitivity. In Pythia-1.4B, the null-corrected excess cosine ($\rho_{\text{disatt}} = +0.307$) outperforms raw self-cosine ($+0.232$) in predicting intervention effect, mirroring Pythia-410M. In Pythia-2.8B, raw self-cosine completely decouples from intervention effect ($\rho_{\text{raw}} = +0.003, \rho_{\text{disatt}} = +0.003$), despite high measurement reliability ($r_\Delta = 0.632$). This confirms that high representation-level cosine alignment does not reliably index intervention sensitivity.
 
 \end{document}

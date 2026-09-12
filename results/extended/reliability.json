@@ -1,0 +1,310 @@
+{
+  "reliability": [
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "n_heads": 384,
+      "docs_per_half": 32,
+      "block": 512,
+      "seq_len": 128,
+      "r_delta": 0.6656928524153243,
+      "r_stat": 0.9823013800820589,
+      "ceiling": 0.8086476412123734,
+      "verdict": "reliable",
+      "resolvable": true,
+      "action": "Delta is reliable. Report rho and rho_corrected. A near-zero rho is a real decoupling.",
+      "baseline_loss_half_a": 3.421726016547736,
+      "baseline_loss_half_b": 3.3586762195497046,
+      "gate_max_rel_frobenius": 0.001656295108781465,
+      "gate_max_rel_error": 0.0021421093961377165,
+      "status": "completed"
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "n_heads": 1024,
+      "docs_per_half": 32,
+      "block": 512,
+      "seq_len": 128,
+      "r_delta": 0.6317623840401602,
+      "r_stat": 0.9670805356376511,
+      "ceiling": 0.7816425684117245,
+      "verdict": "reliable",
+      "resolvable": true,
+      "action": "Delta is reliable. Report rho and rho_corrected. A near-zero rho is a real decoupling.",
+      "baseline_loss_half_a": 3.2703645961491143,
+      "baseline_loss_half_b": 3.2773908479945866,
+      "gate_max_rel_frobenius": 0.0016563881460445596,
+      "gate_max_rel_error": 0.003163885301159274,
+      "status": "completed"
+    }
+  ],
+  "correlations": [
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "statistic": "cos_self",
+      "rho_raw": 0.18746206469770438,
+      "pearson_raw": 0.04185679980437495,
+      "r_delta": 0.6656928524153243,
+      "r_stat": 0.9823013800820589,
+      "r_stat_cos_self": 0.9823013800820589,
+      "ceiling": 0.8086476412123734,
+      "rho_disattenuated": 0.23182169234631034,
+      "n": 384,
+      "verdict": "reliable",
+      "resolvable": true
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "statistic": "excess",
+      "rho_raw": 0.24928071275982502,
+      "pearson_raw": 0.045765363032542083,
+      "r_delta": 0.6656928524153243,
+      "r_stat": 0.9877132006374825,
+      "r_stat_cos_self": 0.9823013800820589,
+      "ceiling": 0.8108721341251253,
+      "rho_disattenuated": 0.30742296136342334,
+      "n": 384,
+      "verdict": "reliable",
+      "resolvable": true
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "statistic": "cos_self",
+      "rho_raw": 0.0026311881517793504,
+      "pearson_raw": -0.01830991885946872,
+      "r_delta": 0.6317623840401602,
+      "r_stat": 0.9670805356376511,
+      "r_stat_cos_self": 0.9670805356376511,
+      "ceiling": 0.7816425684117245,
+      "rho_disattenuated": 0.0033662293458835667,
+      "n": 1024,
+      "verdict": "reliable",
+      "resolvable": true
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "statistic": "excess",
+      "rho_raw": -0.1242899546667397,
+      "pearson_raw": -0.12231948436229009,
+      "r_delta": 0.6317623840401602,
+      "r_stat": 0.9824625831485587,
+      "r_stat_cos_self": 0.9670805356376511,
+      "ceiling": 0.7878343123780454,
+      "rho_disattenuated": -0.1577615403568494,
+      "n": 1024,
+      "verdict": "reliable",
+      "resolvable": true
+    }
+  ],
+  "budget_sweep": [
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 2,
+      "replicate": 0,
+      "rank_agreement": 0.12774830285872735,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 2,
+      "replicate": 1,
+      "rank_agreement": 0.10225895188362552,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 2,
+      "replicate": 2,
+      "rank_agreement": 0.14691749956117459,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 4,
+      "replicate": 0,
+      "rank_agreement": 0.2757891141854616,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 4,
+      "replicate": 1,
+      "rank_agreement": 0.26207141512528465,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 4,
+      "replicate": 2,
+      "rank_agreement": 0.2644423578848602,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 8,
+      "replicate": 0,
+      "rank_agreement": 0.47994226203687135,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 8,
+      "replicate": 1,
+      "rank_agreement": 0.5078550195168161,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 8,
+      "replicate": 2,
+      "rank_agreement": 0.40498671363298994,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 16,
+      "replicate": 0,
+      "rank_agreement": 0.594892953547908,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 16,
+      "replicate": 1,
+      "rank_agreement": 0.5572742948257249,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 16,
+      "replicate": 2,
+      "rank_agreement": 0.6115473052979788,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 32,
+      "replicate": 0,
+      "rank_agreement": 0.7342908749106084,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 32,
+      "replicate": 1,
+      "rank_agreement": 0.6146330577495671,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-1.4b",
+      "docs_per_half": 32,
+      "replicate": 2,
+      "rank_agreement": 0.7234574923676536,
+      "n_heads": 384
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 2,
+      "replicate": 0,
+      "rank_agreement": 0.08685154121459443,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 2,
+      "replicate": 1,
+      "rank_agreement": 0.005653716554022348,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 2,
+      "replicate": 2,
+      "rank_agreement": 0.1741583263877789,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 4,
+      "replicate": 0,
+      "rank_agreement": 0.1426521396549552,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 4,
+      "replicate": 1,
+      "rank_agreement": 0.025829038863344186,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 4,
+      "replicate": 2,
+      "rank_agreement": 0.10650379964070546,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 8,
+      "replicate": 0,
+      "rank_agreement": 0.20869887374347287,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 8,
+      "replicate": 1,
+      "rank_agreement": 0.1324974190767161,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 8,
+      "replicate": 2,
+      "rank_agreement": 0.4617674003464809,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 16,
+      "replicate": 0,
+      "rank_agreement": 0.3704128380001827,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 16,
+      "replicate": 1,
+      "rank_agreement": 0.20065712176282471,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 16,
+      "replicate": 2,
+      "rank_agreement": 0.4567580295991571,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 32,
+      "replicate": 0,
+      "rank_agreement": 0.6514378567828919,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 32,
+      "replicate": 1,
+      "rank_agreement": 0.6123742503001661,
+      "n_heads": 1024
+    },
+    {
+      "model": "EleutherAI/pythia-2.8b",
+      "docs_per_half": 32,
+      "replicate": 2,
+      "rank_agreement": 0.6126756403118603,
+      "n_heads": 1024
+    }
+  ]
+}

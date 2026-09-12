@@ -1,0 +1,3 @@
+model,n_heads,docs_per_half,block,seq_len,r_delta,r_stat,ceiling,verdict,resolvable,action,baseline_loss_half_a,baseline_loss_half_b,gate_max_rel_frobenius,gate_max_rel_error,status
+EleutherAI/pythia-1.4b,384,32,512,128,0.6656928524153243,0.9823013800820589,0.8086476412123734,reliable,True,Delta is reliable. Report rho and rho_corrected. A near-zero rho is a real decoupling.,3.421726016547736,3.3586762195497046,0.001656295108781465,0.0021421093961377165,completed
+EleutherAI/pythia-2.8b,1024,32,512,128,0.6317623840401602,0.9670805356376511,0.7816425684117245,reliable,True,Delta is reliable. Report rho and rho_corrected. A near-zero rho is a real decoupling.,3.2703645961491143,3.2773908479945866,0.0016563881460445596,0.003163885301159274,completed
