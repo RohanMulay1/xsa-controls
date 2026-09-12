@@ -100,3 +100,16 @@ class TestPaperTables:
             timeout=60,
         )
         assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_manifest_claims_reproduce(self):
+        script = ROOT / "scripts" / "make_manifest.py"
+        result = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "31 claims, 31 reproduced" in result.stdout
+

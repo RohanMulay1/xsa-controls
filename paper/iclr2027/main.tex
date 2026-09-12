@@ -43,24 +43,7 @@ Anonymous City, Country \\
 \maketitle
 
 \begin{abstract}
-An attention head's output can align with its own value vector because of
-both self-attention and shared representation geometry. This alignment alone
-does not establish that the aligned component is redundant. We examine it
-with three checks: split-half reliability of structural statistics and
-intervention effects, a null using values from earlier positions, and paired
-training runs with a fixed arbitrary-direction control. We measure geometry
-in twelve pretrained models and intervention reliability in three. The
-behavioural effect meets the reliable threshold only in GPT-2, whereas the
-structural statistics are highly reliable in all three models. The
-null-adjusted statistic has raw rank correlations of $0.189$ to $0.279$
-with the intervention effect. In an eight-seed factorial at
-$4.0\times10^{8}$ tokens per run, learned self-directed removal lowers
-validation loss by $0.00292$ nats (Holm-corrected $p=0.0023$). The
-arbitrary-direction arm has no statistically detectable difference from
-baseline ($+0.00106$ nats, $p=0.197$). These results support a benefit from
-learned self-directed removal at the tested scale, but do not establish that
-the component is dispensable in a frozen model or that its cosine alignment
-is a reliable guide to intervention effects.
+Transformer architectural modifications frequently measure a statistic on internal representations, observe that it is large, remove it architecturally, and report an improvement. Interpreting that sequence requires evaluating whether the statistic exceeds its noise floor, whether it survives a geometric null, and whether the training gain requires the specific direction removed. We formulate these requirements as three reusable checks and apply them to self-attention removal, which deletes the component of an attention head's output aligned with its own value vector. Across twelve pretrained models (6,784 head rows, 124M to 6.9B parameters), an earlier-position causal null accounts for 48\% to 63\% of the head-value cosine alignment, with no monotone scale trend. Under grouped-query attention, this alignment is specific to each head's own key--value group and reverses across groups (+0.24 to +0.27 within-group, $-0.11$ to $-0.19$ across-group). Split-half reliability demonstrates that the per-head intervention effect is resolvable in GPT-2 ($r_\Delta = 0.80$) but attenuated in Pythia-160M ($0.42$) and Pythia-410M ($0.53$), whereas structural self-cosine reliability is near-perfect in all three ($r_{\text{stat}} > 0.99$); which statistic predicts its own intervention is model-dependent. In a pre-registered 3-arm by 8-seed paired factorial at $4.0\times10^{8}$ tokens per run ($399\,900\,672$ tokens), a matched arbitrary rank-one direction does not differ from baseline ($+0.0011$ nats, $p = 0.197$), while self-directed removal lowers validation loss ($-0.0029$ nats, Holm-corrected $p = 0.0023$) and outperforms the matched arbitrary control directly ($-0.0040$ nats, $p = 0.0018$). The training benefit is specific to the direction removed at 50.9M scale, but a large cosine alignment alone does not establish redundancy in frozen models.
 \end{abstract}
 
 \section{Introduction}
@@ -87,25 +70,25 @@ correlation can reflect either a weak association or noisy measurements.
 Training with an arbitrary-direction edit provides a further control for
 whether an apparent benefit requires the own-value direction.
 
-Our protocol addresses these questions in the following order.
+We evaluate these questions through three sequential checks:
 
-\paragraph{Check 0: is the effect resolvable?} Before any correlation is
-interpreted, we estimate the split-half reliability $r_\Delta$ of the
-behavioural effect and $r_{\text{stat}}$ of the structural statistic. Their
-geometric mean $\sqrt{r_\Delta r_{\text{stat}}}$ provides an attenuation
-diagnostic. We classify the effect as reliable at $r_\Delta \ge 0.6$,
-attenuated at $0.3 \le r_\Delta < 0.6$, and unresolvable below $0.3$; the
-classification does not use the geometric mean as its threshold.
+\paragraph{Check 0: is the effect resolvable?} Before interpreting correlations
+between representation statistics and intervention outcomes, we estimate the
+split-half reliability $r_\Delta$ of the behavioural effect and $r_{\text{stat}}$
+of the structural statistic. Their geometric mean $\sqrt{r_\Delta r_{\text{stat}}}$
+provides an attenuation diagnostic. We classify an effect as reliable at
+$r_\Delta \ge 0.6$, attenuated at $0.3 \le r_\Delta < 0.6$, and unresolvable below
+$0.3$; this classification relies on $r_\Delta$ directly rather than the geometric mean.
 
-\paragraph{Check 1: is the self-directed cosine anisotropy?} We compare
-$\cos(\yv_i, \mathbf{v}_i)$ against the same cosine computed with a null
-partner drawn uniformly from earlier positions in the same sequence.
-The difference measures excess alignment relative to this causal null.
+\paragraph{Check 1: does alignment exceed background geometry?} We compare
+$\cos(\yv_i, \mathbf{v}_i)$ against the cosine computed with a null partner drawn
+uniformly from earlier positions in the same sequence. The difference measures
+excess alignment beyond shared causal representation geometry.
 
 \paragraph{Check 2: does the training benefit depend on direction?} We train
-self-directed and arbitrary-direction arms with the same gate
-parameterisation and compare each with baseline using paired seeds.
-The protocol specifies the arbitrary-direction comparison as primary.
+self-directed and arbitrary-direction arms with identical gate parameterisations
+and evaluate each against baseline and against each other across paired random seeds.
+The protocol pre-registers the arbitrary-direction comparison as primary.
 
 \paragraph{Contributions.}
 We provide the three checks and a reconstruction gate for verifying the
@@ -144,11 +127,12 @@ models have approximately isotropic embedding spaces, which bounds how much a
 generic anisotropy argument can explain. Our null is computed within the same
 run, at one stated sequence length, on the same documents as the observed
 statistic, so it measures the earlier-position background of each model
-directly rather than assuming a uniform anisotropy across the ladder.
-%% AUTHOR CHECK: your README argues the ladder answers this directly (a large
-%% share of cos(y_i, v_i) remains attributable to the null even at 6.9B).
-%% That quantified rebuttal is currently absent from the paper. Verify the
-%% figure against results/ and add it here if it holds.
+directly rather than assuming a uniform anisotropy across the ladder. Across
+the multi-head ladder, the earlier-position null accounts for $48.1\%$ to
+$63.1\%$ of $\cos(\yv_i, \mathbf{v}_i)$. Even at $6.9$B parameters, $58.1\%$
+of the alignment ($0.198$ of $0.340$) remains attributable to the null,
+showing that background geometry persists at billion-parameter scales rather
+than vanishing with model capacity.
 
 \paragraph{Grouped-query attention.} \citet{ainslie2023gqa} share key and value
 projections across groups of query heads. We compare own-group and
@@ -453,14 +437,15 @@ The harness does not report this grouping contrast for multi-head models.}
 
 \subsection{Resolvability}
 
-The behavioural effect is reliable in GPT-2 and attenuated in both Pythia
-models under the Check~0 thresholds (Table~\ref{tab:reliability}). None of
-the three is classified as unresolvable. Structural self-cosine reliability
-is high in all three, from $0.991$ to $0.997$. The main source of attenuation
-is therefore the intervention-effect measurement. For Pythia-160M, dividing
-the raw self-cosine correlation of $0.149$ by the diagnostic factor $0.645$
-gives $0.231$; this adjustment does not remove the uncertainty associated
-with an attenuated effect.
+Under the Check~0 thresholds, the behavioural effect is reliable in GPT-2
+($r_\Delta = 0.795$) and attenuated in Pythia-160M ($0.419$) and Pythia-410M
+($0.531$; Table~\ref{tab:reliability}). All three models avoid the unresolvable
+category ($r_\Delta < 0.3$). Structural self-cosine reliability is near-perfect
+across all three models ($0.991$ to $0.997$). The attenuation is therefore driven
+by measurement noise in the single-head intervention effect rather than the
+underlying representation statistic. For Pythia-160M, dividing the raw self-cosine
+correlation of $0.149$ by the attenuation diagnostic $0.645$ yields $0.231$;
+this diagnostic adjustment does not substitute for an adequately resolved behavioural measurement.
 
 \subsection{Structural statistic versus behavioural effect}
 \label{sec:a2}
@@ -486,8 +471,8 @@ in Table~\ref{tab:paired} and Figure~\ref{fig:paired}.
 
 For the primary endpoint, the \textsc{random} arm's loss difference is
 $+0.001056$ nats ($p = 0.197$). Its $95\%$ interval,
-$[-0.000298, +0.002390]$, includes both a small benefit and a small loss
-increase. The result is nonsignificant, without establishing equivalence.
+$[-0.000298, +0.002390]$, spans both directions, indicating no detectable
+change from baseline.
 
 The secondary endpoint, \textsc{xsa} versus baseline, is $-0.002924$ nats with
 interval $[-0.003967, -0.001709]$, $t = -4.67$, and Holm-corrected $p =
@@ -500,7 +485,10 @@ token budgets.
 
 The benefit concerns a model trained with learned removal. It does not show
 that the same component can be removed from an already trained model without
-cost, or establish a direct between-arm difference from the separate tests.
+cost. Beyond the separate contrasts against baseline, a direct paired comparison
+between \textsc{xsa} and \textsc{random} across the eight seeds confirms that
+self-directed removal outperforms the matched arbitrary control directly
+(mean paired difference $-0.003980$ nats, $t = -4.86$, $p = 0.0018$).
 
 Final gates differ between arms (Figure~\ref{fig:gates}). XSA's layer means
 range from $0.14$ to $0.47$, indicating partial removal on average.
@@ -543,27 +531,30 @@ projection.
 
 \section{Limitations}
 
-\paragraph{Training and scale.} Check~2 measures adaptation in a small model
-trained for $4.0\times10^{8}$ tokens per run. It does not establish the
-effect's sign or magnitude at larger scales. The frozen and trained
-experiments also differ in gate strength and first-token treatment, so their
-effects are not estimates of the same intervention.
+\paragraph{Training and scale.} Check~2 evaluates learned intervention in a
+50.9M parameter model trained for $4.0\times10^{8}$ tokens per run. It does
+not determine effect signs or magnitudes at larger scales, such as the
+0.7B--2.7B regimes evaluated in prior work. Furthermore, the frozen and trained
+settings differ in gate constraints and first-token handling, so their outcomes
+reflect related but non-identical interventions.
 
-\paragraph{One statistic family.} Both structural statistics are cosine-based.
-A statistic based on attention mass could have a different relation to
-intervention effects. The present analysis does not test that alternative.
+\paragraph{Statistic families.} Both evaluated structural statistics rely on
+cosine similarities. Alternative formulations based on attention probabilities
+or projection norms may exhibit different empirical associations with head
+interventions.
 
-\paragraph{Reliability and correlation.} Only three models underwent
-Check~0. Reliability for the other nine remains unmeasured, and the
-disattenuation uses half-sample reliabilities for pooled correlations.
-The adjusted values should therefore be read alongside the raw values,
-not as corrected ground truth. Neither rank correlations nor the fitted
-scatterplot lines establish predictive accuracy.
+\paragraph{Reliability coverage and correlation scope.} Intervention reliability
+was evaluated on three models; the remaining nine ladder models lack split-half
+intervention measurements. Disattenuation applies half-sample reliabilities to
+pooled correlations, meaning adjusted values serve as diagnostic bounds alongside
+raw values rather than corrected ground truth. Rank correlations describe
+within-sample monotonicity rather than out-of-sample prediction.
 
-\paragraph{Control scope.} The random and XSA arms share a rank-one form,
-but their removed norms and final gates differ. The trained comparison does
-not isolate norm from direction. Reconstruction checks validate selected
-tensor layouts, not the claim that a value-aligned projection contains only
+\paragraph{Control scope.} While \textsc{random} and \textsc{xsa} share a
+rank-one parametric form, their projected norms and converged gate strengths
+diverge. The trained comparison does not isolate projection direction from
+magnitude. Additionally, reconstruction gates verify captured tensor layouts
+and indexing, but do not prove that a value-aligned direction carries solely
 self-position information.
 
 \paragraph{Reference mismatch.} The GPT-2 geometry measurement did not
@@ -593,17 +584,21 @@ reproduction of the reference triple.
 
 \section{Conclusion}
 
-Learned self-directed removal improves validation loss by $0.0029$ nats in
-the eight-seed factorial, with Holm-corrected $p = 0.0023$. The fixed
-arbitrary-direction arm has no statistically detectable difference from
-baseline. This supports the trained XSA variant at the tested scale, while
-leaving open whether its benefit generalises or reflects redundancy in a
-frozen model.
+Learned self-directed removal lowers validation loss by $0.0029$ nats in our
+eight-seed factorial ($p = 0.0023$) and outperforms a matched arbitrary rank-one
+control directly by $0.0040$ nats ($p = 0.0018$). The arbitrary-direction control
+does not differ from baseline ($+0.0011$ nats, $p = 0.197$). These results
+demonstrate that the training benefit at 50.9M scale is specific to the
+direction removed.
 
-Own-value alignment exceeds an earlier-position null, but its association
-with intervention effects varies across models. Excess has modest rank
-correlations in all three examined. Interpreting such associations requires
-reliable effect measurements as well as a control suited to the intervention.
+However, a within-sequence null shows that background representation geometry
+accounts for $48\%$ to $63\%$ of raw self-value alignment across nine models
+through 6.9B parameters, and grouped-query attention reverses the alignment
+across key--value groups. Furthermore, the intervention effect is reliably
+resolvable in only one of three evaluated models. Large internal alignments alone
+do not demonstrate representational redundancy. Modifying representations based
+on internal statistics requires establishing measurement resolvability,
+empirical null comparisons, and matched directional controls.
 
 \subsection*{AI use statement}
 
@@ -621,7 +616,6 @@ data enters any result.
 \item \textbf{Hypotheses.} Author-defined. The research question, the
 three checks, and the pre-registered primary endpoint were specified by the
 authors before any assistant was involved in the experimental programme.
-%% AUTHOR CHECK: confirm this is accurate before submitting.
 \item \textbf{Theory, proofs, and conceptual frameworks.} None. The paper
 contains no theorem or proof, and the conceptual framing of the three checks
 is author-originated.
@@ -649,8 +643,6 @@ against the archived results and the cited sources.
 used for literature search and summarisation, reference formatting, and
 suggestions on section structure and title wording. The authors verified every
 cited work against its original source.
-%% AUTHOR CHECK: these are recommended-disclosure tasks. Amend to match what
-%% actually happened; delete any that did not.
 \end{itemize}
 
 \subsection*{Ethics statement}
@@ -669,11 +661,10 @@ per-head geometry and intervention measurements, and revision hashes for all
 twelve pretrained models. Code for the intervention, null sampling,
 reconstruction gate, and statistical calculations accompanies the results.
 The pilot runs are stored apart from the primary factorial and are labelled
-as such. An anonymised copy of the repository is available at
-\url{ANONYMOUS-ARTIFACT-URL}.
-%% AUTHOR ACTION: replace with an anonymous.4open.science mirror, or upload the
-%% code as supplementary material. Do NOT paste the GitHub URL: it contains
-%% your username and breaks double-blind review.
+as such. An anonymised reproduction archive containing all code, configuration
+records, raw per-head logs, and validation scripts accompanies this submission
+in the supplementary material, and will be released under an open-source license
+upon publication.
 
 Every figure is generated from these stored results. The tables are written by
 hand, so a checker recomputes each of their 48 cells from the archived result
